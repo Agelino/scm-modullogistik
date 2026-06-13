@@ -1,6 +1,7 @@
 # 📡 Dokumentasi API — SCM MBG Backend
-
-**Base URL:** `http://localhost:5001/api`  
+ini untuk url nya nanti di env
+**Base URL:** `MONGODB_URI=mongodb+srv://scmmbg:scmmbg@cluster0.t9hmb4q.mongodb.net/scm_mbg?appName=Cluster0
+`  
 **Format Response:** JSON  
 **Content-Type:** `application/json` (kecuali upload foto: `multipart/form-data`)
 

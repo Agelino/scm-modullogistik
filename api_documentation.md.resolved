@@ -1,0 +1,334 @@
+# 📡 Dokumentasi API — SCM MBG Backend
+
+**Base URL:** `http://localhost:5001/api`  
+**Format Response:** JSON  
+**Content-Type:** `application/json` (kecuali upload foto: `multipart/form-data`)
+
+> [!IMPORTANT]
+> Semua response mengikuti format standar:
+> ```json
+> { "success": true, "data": {...}, "count": 10, "message": "..." }
+> ```
+
+---
+
+## 1. 🏫 Schools (Master Data Sekolah)
+**Base:** `/api/schools`
+
+| Method | Endpoint | Kegunaan |
+|--------|----------|----------|
+| `GET` | `/api/schools` | Ambil semua data sekolah (nama, alamat, koordinat, jumlah porsi) |
+| `GET` | `/api/schools/:id` | Ambil detail satu sekolah |
+| `POST` | `/api/schools` | Tambah sekolah baru |
+| `PUT` | `/api/schools/:id` | Update data sekolah |
+| `DELETE` | `/api/schools/:id` | Hapus sekolah |
+| `GET` | `/api/schools/stats/portions` | Statistik total porsi per sekolah (untuk dashboard) |
+| `GET` | `/api/schools/geocode?q=...` | Geocoding alamat → koordinat GPS |
+
+**Data yang dikembalikan tiap sekolah:**
+```json
+{
+  "_id": "...",
+  "name": "SDN Menteng 01",
+  "address": "Jl. Menteng...",
+  "location": { "type": "Point", "coordinates": [106.84, -6.19] },
+  "totalStudents": 320,
+  "portionsNeeded": 320,
+  "contactPerson": "...",
+  "phone": "...",
+  "district": "Jakarta Pusat"
+}
+```
+
+**Dibutuhkan oleh modul:** Load Planning, Route Optimization, Live Monitoring, Analytics
+
+---
+
+## 2. 👨‍🎓 Students (Data Siswa)
+**Base:** `/api/students`
+
+| Method | Endpoint | Kegunaan |
+|--------|----------|----------|
+| `GET` | `/api/students` | Ambil semua siswa (bisa filter dengan `?schoolId=...`) |
+| `GET` | `/api/students/school/:schoolId` | Ambil semua siswa dari satu sekolah |
+| `POST` | `/api/students` | Tambah siswa baru |
+| `PUT` | `/api/students/:id` | Update data siswa |
+| `DELETE` | `/api/students/:id` | Hapus siswa |
+
+**Data yang dikembalikan:**
+```json
+{
+  "_id": "...",
+  "name": "Budi Santoso",
+  "studentId": "STD-001",
+  "className": "6A",
+  "school": { "_id": "...", "name": "SDN Menteng 01" },
+  "isActive": true
+}
+```
+
+**Dibutuhkan oleh modul:** Master Data (referensi jumlah porsi per sekolah)
+
+---
+
+## 3. 🚛 Vehicles (Armada Kendaraan)
+**Base:** `/api/vehicles`
+
+| Method | Endpoint | Kegunaan |
+|--------|----------|----------|
+| `GET` | `/api/vehicles` | Ambil semua kendaraan beserta driver yang assigned |
+| `GET` | `/api/vehicles/:id` | Detail satu kendaraan |
+| `POST` | `/api/vehicles` | Tambah kendaraan baru |
+| `PUT` | `/api/vehicles/:id` | Update data kendaraan |
+| `DELETE` | `/api/vehicles/:id` | Hapus kendaraan |
+| `POST` | `/api/vehicles/:id/assign-driver` | Assign driver ke kendaraan |
+| `DELETE` | `/api/vehicles/:id/remove-driver/:driverId` | Lepas driver dari kendaraan |
+
+**Data yang dikembalikan:**
+```json
+{
+  "_id": "...",
+  "plateNumber": "B 1234 MBG",
+  "type": "Box",
+  "capacity": 350,
+  "status": "available",
+  "brand": "Mitsubishi",
+  "fuelType": "Solar",
+  "assignedDrivers": [{ "_id": "...", "name": "...", "status": "available" }],
+  "currentLocation": { "coordinates": [106.84, -6.19] }
+}
+```
+
+**Status kendaraan:** `available` | `in_use` | `maintenance`
+
+**Dibutuhkan oleh modul:** Load Planning (kapasitas), Route Optimization, Live Monitoring, Analytics
+
+---
+
+## 4. 👨‍✈️ Drivers (Data Driver)
+**Base:** `/api/drivers`
+
+| Method | Endpoint | Kegunaan |
+|--------|----------|----------|
+| `GET` | `/api/drivers` | Ambil semua driver (termasuk kendaraan yang di-assign) |
+| `GET` | `/api/drivers/:id` | Detail satu driver |
+| `POST` | `/api/drivers` | Tambah driver baru |
+| `PUT` | `/api/drivers/:id` | Update data driver |
+| `DELETE` | `/api/drivers/:id` | Hapus driver |
+| `PATCH` | `/api/drivers/:id/status` | Update status driver (`available`/`busy`/`offline`) |
+
+**Data yang dikembalikan:**
+```json
+{
+  "_id": "...",
+  "employeeId": "DRV-001",
+  "name": "Budi Driver",
+  "phone": "08xxx",
+  "licenseNumber": "SIM-...",
+  "status": "available",
+  "rating": 4.8,
+  "totalDeliveries": 120
+}
+```
+
+**Status driver:** `available` | `busy` | `offline`
+
+**Dibutuhkan oleh modul:** Load Planning (pilih driver per kendaraan), Route Optimization
+
+---
+
+## 5. 📦 Load Plans (Perencanaan Muatan + Delivery Plan)
+**Base:** `/api/load-plans`
+
+| Method | Endpoint | Kegunaan |
+|--------|----------|----------|
+| `GET` | `/api/load-plans/ready-portions` | Ambil data porsi siap dari modul produksi (mock Noval) |
+| `GET` | `/api/load-plans/production-status` | Status produksi dapur saat ini |
+| `POST` | `/api/load-plans/calculate` | **Jalankan algoritma First-Fit Decreasing** → hitung distribusi porsi per kendaraan |
+| `GET` | `/api/load-plans` | Ambil semua delivery plan yang sudah disimpan |
+| `POST` | `/api/load-plans` | Simpan delivery plan baru ke database |
+| `PATCH` | `/api/load-plans/:id/status` | Update status plan (`planned`→`loading`→`in_transit`→`completed`) |
+
+**Body `POST /calculate`:**
+```json
+{ "date": "2026-06-11", "schoolIds": ["id1", "id2"] }
+```
+
+**Body `POST /` (simpan delivery plan):**
+```json
+{
+  "date": "2026-06-11",
+  "vehicle": "vehicleId",
+  "driver": "driverId",
+  "schools": [{ "school": "schoolId", "portions": 320 }],
+  "totalPortions": 320,
+  "status": "planned"
+}
+```
+
+**Response `GET /ready-portions`:**
+```json
+{
+  "kitchen": "Dapur Pusat MBG Jakarta",
+  "totalPortionsReady": 4200,
+  "totalPortionsOrdered": 4500,
+  "schools": [{ "schoolName": "...", "portionsReady": 320, "status": "ready", "menuItems": [...] }]
+}
+```
+
+**Status delivery plan:** `planned` | `loading` | `in_transit` | `completed` | `cancelled`
+
+**Dibutuhkan oleh modul:** Route Optimization, Live Monitoring, Proof of Delivery, Analytics
+
+---
+
+## 6. 🗺️ Routes (Optimasi Rute)
+**Base:** `/api/routes`
+
+| Method | Endpoint | Kegunaan |
+|--------|----------|----------|
+| `POST` | `/api/routes/optimize` | Hitung rute optimal untuk satu kendaraan (Haversine/OSRM) |
+| `GET` | `/api/routes` | Ambil semua rute yang tersimpan |
+| `GET` | `/api/routes/:planId` | Ambil rute berdasarkan delivery plan ID |
+
+**Body `POST /optimize`:**
+```json
+{
+  "originCoords": [106.8456, -6.2088],
+  "schoolIds": ["id1", "id2", "id3"],
+  "deliveryPlanId": "planId",
+  "useOSRM": true
+}
+```
+
+**Dibutuhkan oleh modul:** Live Monitoring (tampilkan jalur di peta)
+
+---
+
+## 7. 📍 Tracking (Live Monitoring GPS)
+**Base:** `/api/tracking`
+
+| Method | Endpoint | Kegunaan |
+|--------|----------|----------|
+| `POST` | `/api/tracking/update` | Update posisi GPS kendaraan secara realtime |
+| `GET` | `/api/tracking/active/all` | Ambil posisi semua kendaraan yang sedang aktif |
+| `GET` | `/api/tracking/:planId` | Tracking terkini untuk satu delivery plan |
+| `GET` | `/api/tracking/:planId/history` | Riwayat pergerakan kendaraan |
+
+**Body `POST /update`:**
+```json
+{
+  "deliveryPlanId": "...",
+  "coordinates": [106.84, -6.19],
+  "speed": 45,
+  "heading": 180,
+  "status": "in_transit",
+  "battery": 85
+}
+```
+
+> [!NOTE]
+> Selain REST API, tracking juga bisa dilakukan via **Socket.io** dengan event `location_update`.
+> Socket URL: `http://localhost:5001` — join room `monitoring`.
+
+---
+
+## 8. ✅ Deliveries / Proof of Delivery (Bukti Pengiriman)
+**Base:** `/api/deliveries`
+
+| Method | Endpoint | Kegunaan |
+|--------|----------|----------|
+| `GET` | `/api/deliveries` | Ambil semua catatan pengiriman (bisa filter `?status=delivered`) |
+| `POST` | `/api/deliveries` | Buat delivery records dari sebuah delivery plan |
+| `GET` | `/api/deliveries/plan/:planId` | Ambil semua pengiriman dari satu delivery plan |
+| `POST` | `/api/deliveries/:id/confirm` | Konfirmasi pengiriman + upload foto bukti (`multipart/form-data`) |
+| `PATCH` | `/api/deliveries/:id/status` | Update status pengiriman |
+
+**Status pengiriman:** `pending` | `delivered` | `rejected`
+
+**Body `POST /:id/confirm` (form-data):**
+- `photo` — file foto bukti pengiriman
+- `receivedBy` — nama penerima
+- `signature` — tanda tangan (base64)
+- `notes` — catatan tambahan
+- `temperature` — suhu makanan (opsional)
+
+---
+
+## 9. 📊 Analytics (Laporan & Performa)
+**Base:** `/api/analytics`
+
+| Method | Endpoint | Kegunaan |
+|--------|----------|----------|
+| `GET` | `/api/analytics/dashboard` | Statistik ringkasan untuk dashboard utama |
+| `GET` | `/api/analytics/performance?month=6&year=2026` | Laporan performa bulanan (on-time rate, completion rate) |
+| `GET` | `/api/analytics/fuel-efficiency` | Efisiensi bahan bakar per kendaraan |
+| `GET` | `/api/analytics/on-time-rate` | Tingkat ketepatan waktu pengiriman |
+
+**Response `GET /dashboard`:**
+```json
+{
+  "totalSchools": 25,
+  "totalVehicles": 10,
+  "availableVehicles": 7,
+  "totalDrivers": 12,
+  "activeDrivers": 8,
+  "todayDeliveryPlans": 5,
+  "totalPortionsNeeded": 4500,
+  "systemStatus": "active"
+}
+```
+
+---
+
+## 10. ❤️ Health Check
+| Method | Endpoint | Kegunaan |
+|--------|----------|----------|
+| `GET` | `/api/health` | Cek apakah server aktif |
+
+**Response:**
+```json
+{ "status": "ok", "timestamp": "2026-06-11T...", "uptime": 1234 }
+```
+
+---
+
+## 🔌 Socket.io — Realtime Events
+
+**URL:** `http://localhost:5001`
+
+| Event | Arah | Data | Kegunaan |
+|-------|------|------|----------|
+| `join_monitoring` | Client → Server | — | Masuk ke room monitoring |
+| `location_update` | Client → Server | `{ deliveryPlanId, coordinates, speed, heading, status, battery }` | Driver kirim GPS |
+| `vehicle_location_updated` | Server → Client | `{ planId, location, speed, ... }` | Broadcast posisi ke semua monitor |
+| `delivery_status_changed` | Server → Client | `{ planId, status }` | Notifikasi perubahan status pengiriman |
+
+---
+
+## 🗂️ Ringkasan Ketergantungan Antar Modul
+
+```
+Modul Produksi (Noval) ──→ /api/load-plans/ready-portions
+                                    ↓
+                         /api/load-plans/calculate (FFD)
+                                    ↓
+                         /api/load-plans (simpan delivery plan)
+                                    ↓
+           ┌─────────────────────────────────────┐
+           ↓                                     ↓
+  /api/routes/optimize               /api/deliveries (buat POD records)
+           ↓                                     ↓
+  /api/tracking (GPS realtime)        /api/deliveries/:id/confirm
+           ↓                                     ↓
+           └──────────────→ /api/analytics ←─────┘
+```
+
+| Data yang Dibutuhkan Modul Lain | Endpoint yang Dipanggil |
+|---------------------------------|------------------------|
+| Daftar sekolah + koordinat + porsi | `GET /api/schools` |
+| Kendaraan tersedia + kapasitas | `GET /api/vehicles` |
+| Driver tersedia | `GET /api/drivers` |
+| Delivery plan aktif hari ini | `GET /api/load-plans` |
+| Status pengiriman realtime | `GET /api/tracking/active/all` atau Socket.io |
+| Porsi siap dari dapur | `GET /api/load-plans/ready-portions` |

@@ -25,6 +25,13 @@ exports.createVehicle = async (req, res) => {
     const vehicle = await Vehicle.create(req.body);
     res.status(201).json({ success: true, data: vehicle });
   } catch (error) {
+    // Handle duplikat plat nomor
+    if (error.code === 11000 || (error.message && error.message.includes('E11000'))) {
+      return res.status(400).json({
+        success: false,
+        message: `Plat nomor "${(req.body.plateNumber || '').toUpperCase()}" sudah terdaftar. Gunakan plat nomor yang berbeda.`
+      });
+    }
     res.status(400).json({ success: false, message: error.message });
   }
 };

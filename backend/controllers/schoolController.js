@@ -25,13 +25,25 @@ exports.getSchool = async (req, res) => {
 exports.createSchool = async (req, res) => {
   try {
     const { name, address, lat, lng, totalStudents, contactPerson, phone, district } = req.body;
+
+    const parsedLat = parseFloat(lat);
+    const parsedLng = parseFloat(lng);
+
+    // Gunakan koordinat default (pusat Bandung) jika lat/lng tidak valid
+    const finalLat = isNaN(parsedLat) ? -6.9175 : parsedLat;
+    const finalLng = isNaN(parsedLng) ? 107.6191 : parsedLng;
+
     const school = await School.create({
-      name, address,
-      location: { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] },
+      name,
+      address,
+      location: { type: 'Point', coordinates: [finalLng, finalLat] },
       totalStudents: parseInt(totalStudents) || 0,
       portionsNeeded: parseInt(totalStudents) || 0,
-      contactPerson, phone, district
+      contactPerson: contactPerson || '',
+      phone: phone || '',
+      district: district || ''
     });
+
     res.status(201).json({ success: true, data: school });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -42,14 +54,27 @@ exports.createSchool = async (req, res) => {
 exports.updateSchool = async (req, res) => {
   try {
     const { name, address, lat, lng, totalStudents, contactPerson, phone, district } = req.body;
-    const updateData = { name, address, contactPerson, phone, district };
-    if (lat && lng) {
-      updateData.location = { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] };
+    const updateData = {
+      name,
+      address,
+      contactPerson: contactPerson || '',
+      phone: phone || '',
+      district: district || ''
+    };
+
+    const parsedLat = parseFloat(lat);
+    const parsedLng = parseFloat(lng);
+
+    // Update koordinat jika ada nilai valid; jika tidak, pertahankan koordinat lama
+    if (!isNaN(parsedLat) && !isNaN(parsedLng)) {
+      updateData.location = { type: 'Point', coordinates: [parsedLng, parsedLat] };
     }
+
     if (totalStudents !== undefined) {
-      updateData.totalStudents = parseInt(totalStudents);
-      updateData.portionsNeeded = parseInt(totalStudents);
+      updateData.totalStudents = parseInt(totalStudents) || 0;
+      updateData.portionsNeeded = parseInt(totalStudents) || 0;
     }
+
     const school = await School.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
     if (!school) return res.status(404).json({ success: false, message: 'Sekolah tidak ditemukan' });
     res.json({ success: true, data: school });

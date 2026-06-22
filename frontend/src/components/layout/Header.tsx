@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Bell, Menu } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -8,11 +9,16 @@ interface HeaderProps {
 
 export default function Header({ onToggleSidebar, isSidebarOpen }: HeaderProps) {
   const [time, setTime] = useState(new Date());
+  const { user } = useAuth();
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  const initials = user?.name
+    ? user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+    : 'A';
 
   return (
     <header className="app-header">
@@ -68,8 +74,8 @@ export default function Header({ onToggleSidebar, isSidebarOpen }: HeaderProps) 
           </div>
 
           <button className="profile-chip" aria-label="Profil pengguna">
-            <span className="profile-avatar">A</span>
-            <span className="text-xs text-gray-700">Admin</span>
+            <span className="profile-avatar">{initials}</span>
+            <span className="text-xs text-gray-700">{user?.name?.split(' ')[0] ?? 'Admin'}</span>
           </button>
         </div>
       </div>

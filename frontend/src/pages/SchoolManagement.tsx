@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { schoolApi, studentApi } from '../api/apiClient';
 import type { ISchool, IStudent } from '../types';
 import Modal from '../components/common/Modal';
@@ -98,6 +98,40 @@ export default function SchoolManagement() {
   const [menuModalSchool, setMenuModalSchool] = useState<ISchool | null>(null);
   const [form, setForm] = useState({ name: '', address: '', lat: '', lng: '', totalStudents: '', contactPerson: '', phone: '', district: '' });
   const [geoResults, setGeoResults] = useState<{ displayName: string; lat: number; lng: number; district: string }[]>([]);
+  const [geoQuery, setGeoQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Helper: jalankan pencarian ke Nominatim
+  const doGeoSearch = useCallback(async (query: string) => {
+    if (!query || query.trim().length < 3) return;
+    setIsSearching(true);
+    try {
+      const res = await schoolApi.geocode(query.trim());
+      const results = res.data.data;
+      setGeoResults(results);
+    } catch {
+      // silent fail
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  // Auto-search dengan debounce 800ms setiap kali geoQuery berubah
+  useEffect(() => {
+    if (!geoQuery || geoQuery.trim().length < 3) {
+      setGeoResults([]);
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      doGeoSearch(geoQuery);
+    }, 800);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [geoQuery, doGeoSearch]);
+
 
   const loadSchools = useCallback(async () => {
     try {
@@ -145,6 +179,8 @@ export default function SchoolManagement() {
   const openAddModal = () => {
     setEditingSchool(null);
     setForm({ name: '', address: '', lat: '', lng: '', totalStudents: '', contactPerson: '', phone: '', district: '' });
+    setGeoQuery('');
+    setGeoResults([]);
     setShowModal(true);
   };
 
@@ -160,6 +196,8 @@ export default function SchoolManagement() {
       phone: school.phone,
       district: school.district,
     });
+    setGeoQuery(school.address || school.name);
+    setGeoResults([]);
     setShowModal(true);
   };
 
@@ -627,105 +665,172 @@ export default function SchoolManagement() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Nama Sekolah</label>
-              <input className="form-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+              <label className="block text-xs font-medium text-gray-500 mb-1">Nama Sekolah <span className="text-red-400">*</span></label>
+              <input className="form-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required placeholder="Contoh: SDN 01 Bandung" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">Wilayah</label>
-              <input className="form-input" value={form.district} onChange={e => setForm({ ...form, district: e.target.value })} />
+              <input className="form-input" value={form.district} onChange={e => setForm({ ...form, district: e.target.value })} placeholder="Contoh: Bandung Utara" />
             </div>
           </div>
 
-          {/* Geocoding: Search address instead of manual lat/lng */}
+          {/* Geocoding — cari otomatis saat mengetik */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1 flex items-center gap-1"><Search size={12} /> Cari Alamat (Nominatim / OpenStreetMap)</label>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                className="form-input flex-1"
-                placeholder="Ketik nama jalan, sekolah, atau alamat..."
-                value={form.address}
-                onChange={e => setForm({ ...form, address: e.target.value })}
-                required
-              />
-              <button
-                type="button"
-                className="btn-secondary text-xs px-4 whitespace-nowrap"
-                onClick={async () => {
-                  if (!form.address || form.address.length < 3) { alert('Ketik minimal 3 karakter alamat'); return; }
-                  try {
-                    const res = await schoolApi.geocode(form.address);
-                    const results = res.data.data;
-                    if (results.length === 0) {
-                      alert('Alamat tidak ditemukan. Coba perjelas alamat atau nama sekolah.');
-                      return;
-                    }
-                    setGeoResults(results);
-                  } catch {
-                    alert('Gagal mencari alamat. Periksa koneksi internet.');
-                  }
-                }}
-              >
-                <Search size={12} className="inline-block mr-1" /> Cari
-              </button>
+            <label className="block text-xs font-medium text-gray-500 mb-1 flex items-center gap-1">
+              <Search size={12} /> Cari Lokasi di Peta
+              <span className="text-gray-400 font-normal">— ketik nama sekolah atau alamat</span>
+            </label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  className="form-input"
+                  placeholder="Contoh: SDN 01 Bandung, atau nama jalan..."
+                  value={geoQuery}
+                  onChange={e => setGeoQuery(e.target.value)}
+                  autoComplete="off"
+                />
+                {isSearching && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <span style={{
+                      display: 'inline-block', width: 14, height: 14,
+                      border: '2px solid #c8e6c9', borderTopColor: '#2e7d32',
+                      borderRadius: '50%', animation: 'spin 0.7s linear infinite'
+                    }} />
+                  </span>
+                )}
+              </div>
+              {/* Tombol salin nama sekolah ke kolom pencarian */}
+              {form.name && (
+                <button
+                  type="button"
+                  className="btn-secondary whitespace-nowrap"
+                  style={{ fontSize: 12, padding: '0 14px' }}
+                  onClick={() => setGeoQuery(form.name)}
+                  title="Cari berdasarkan nama sekolah"
+                >
+                  <MapPin size={13} style={{ display: 'inline', marginRight: 4 }} />
+                  Cari nama ini
+                </button>
+              )}
             </div>
-            {/* Geocode results dropdown */}
+            <p className="text-[11px] text-gray-400 mt-1">
+              Sistem akan mencari otomatis setelah Anda berhenti mengetik. Pilih hasil yang sesuai di bawah.
+            </p>
+
+            {/* Dropdown hasil pencarian */}
             {geoResults.length > 0 && (
-              <div className="mt-2 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-md max-h-48 overflow-y-auto">
+              <div className="mt-2 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-lg max-h-52 overflow-y-auto">
                 {geoResults.map((r, idx) => (
                   <button
                     type="button"
                     key={idx}
-                    className="w-full text-left px-3 py-2.5 text-xs border-b border-gray-100 hover:bg-green-50 transition-colors"
+                    className="w-full text-left px-4 py-3 text-xs border-b border-gray-100 hover:bg-green-50 transition-colors"
                     onClick={() => {
                       setForm({
                         ...form,
-                        address: r.displayName.split(',').slice(0, 3).join(','),
+                        address: r.displayName.split(',').slice(0, 4).join(','),
                         lat: String(r.lat),
                         lng: String(r.lng),
                         district: r.district || form.district,
                       });
+                      setGeoQuery(r.displayName.split(',').slice(0, 3).join(','));
                       setGeoResults([]);
                     }}
                   >
-                    <p className="text-gray-800 font-medium flex items-center gap-1"><MapPin size={11} /> {r.displayName.split(',').slice(0, 3).join(',')}</p>
-                    <p className="text-gray-400 mt-0.5">Lat: {r.lat.toFixed(6)}, Lng: {r.lng.toFixed(6)} {r.district ? `• ${r.district}` : ''}</p>
+                    <p className="text-gray-800 font-semibold flex items-center gap-1.5">
+                      <MapPin size={11} className="text-green-600 flex-shrink-0" />
+                      {r.displayName.split(',').slice(0, 3).join(',')}
+                    </p>
+                    <p className="text-gray-400 mt-0.5 pl-4">
+                      {r.district && <span className="text-green-600 mr-2">• {r.district}</span>}
+                      Lat: {r.lat.toFixed(5)}, Lng: {r.lng.toFixed(5)}
+                    </p>
                   </button>
                 ))}
               </div>
             )}
+
+            {/* Tidak ada hasil */}
+            {!isSearching && geoQuery.length >= 3 && geoResults.length === 0 && (
+              <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                <AlertTriangle size={11} className="text-orange-400" />
+                Tidak ditemukan. Coba kata kunci lebih spesifik.
+              </p>
+            )}
           </div>
 
-          {/* Lat/Lng (auto-filled, readonly visual but still editable) */}
+
+          {/* Koordinat — opsional, auto dari pencarian */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1 flex items-center gap-1">Latitude {form.lat ? <CheckCircle size={11} className="text-green-600" /> : <AlertTriangle size={11} className="text-orange-500" />}</label>
-              <input className="form-input bg-gray-50" type="number" step="any" value={form.lat} onChange={e => setForm({ ...form, lat: e.target.value })} required placeholder="Auto dari pencarian" />
+              <label className="block text-xs font-medium text-gray-500 mb-1 flex items-center gap-1">
+                Latitude
+                {form.lat
+                  ? <CheckCircle size={11} className="text-green-600" />
+                  : <span className="text-[10px] text-orange-400 font-normal ml-1">(opsional)</span>
+                }
+              </label>
+              <input
+                className={`form-input ${!form.lat ? 'bg-gray-50 border-dashed' : 'bg-white'}`}
+                type="number"
+                step="any"
+                value={form.lat}
+                onChange={e => setForm({ ...form, lat: e.target.value })}
+                placeholder="Auto dari pencarian"
+              />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1 flex items-center gap-1">Longitude {form.lng ? <CheckCircle size={11} className="text-green-600" /> : <AlertTriangle size={11} className="text-orange-500" />}</label>
-              <input className="form-input bg-gray-50" type="number" step="any" value={form.lng} onChange={e => setForm({ ...form, lng: e.target.value })} required placeholder="Auto dari pencarian" />
+              <label className="block text-xs font-medium text-gray-500 mb-1 flex items-center gap-1">
+                Longitude
+                {form.lng
+                  ? <CheckCircle size={11} className="text-green-600" />
+                  : <span className="text-[10px] text-orange-400 font-normal ml-1">(opsional)</span>
+                }
+              </label>
+              <input
+                className={`form-input ${!form.lng ? 'bg-gray-50 border-dashed' : 'bg-white'}`}
+                type="number"
+                step="any"
+                value={form.lng}
+                onChange={e => setForm({ ...form, lng: e.target.value })}
+                placeholder="Auto dari pencarian"
+              />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Jumlah Siswa</label>
-              <input className="form-input" type="number" value={form.totalStudents} onChange={e => setForm({ ...form, totalStudents: e.target.value })} required />
+              <label className="block text-xs font-medium text-gray-500 mb-1">Jumlah Siswa <span className="text-red-400">*</span></label>
+              <input className="form-input" type="number" min="0" value={form.totalStudents} onChange={e => setForm({ ...form, totalStudents: e.target.value })} required placeholder="0" />
             </div>
           </div>
+
+          {/* Info jika koordinat belum diisi */}
+          {(!form.lat || !form.lng) && (
+            <div className="flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
+              <AlertTriangle size={14} className="text-amber-500 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-amber-700 leading-relaxed">
+                <strong>Koordinat belum diisi.</strong> Gunakan fitur <em>Cari Alamat</em> di atas untuk mengisi Latitude & Longitude secara otomatis.
+                Jika dikosongkan, sistem akan menggunakan koordinat default (pusat Bandung) — dapat diperbarui nanti.
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">Kontak PIC</label>
-              <input className="form-input" value={form.contactPerson} onChange={e => setForm({ ...form, contactPerson: e.target.value })} />
+              <input className="form-input" value={form.contactPerson} onChange={e => setForm({ ...form, contactPerson: e.target.value })} placeholder="Nama penanggung jawab" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">No. Telepon</label>
-              <input className="form-input" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+              <input className="form-input" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="08xx-xxxx-xxxx" />
             </div>
           </div>
+
           <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
             <button type="submit" className="btn-primary flex-1">{editingSchool ? 'Simpan Perubahan' : 'Tambah Sekolah'}</button>
             <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">Batal</button>
           </div>
         </form>
       </Modal>
+
 
       {/* Student list modal (per school) */}
       <Modal

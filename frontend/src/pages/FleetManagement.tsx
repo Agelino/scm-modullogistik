@@ -16,6 +16,7 @@ export default function FleetManagement() {
   const [selectedVehicle, setSelectedVehicle] = useState<IVehicle | null>(null);
   const [editingItem, setEditingItem] = useState<IVehicle | IDriver | null>(null);
   const [vForm, setVForm] = useState({ plateNumber: '', type: 'Box', capacity: '', brand: '', year: '', fuelType: 'Solar' });
+  const [vFormError, setVFormError] = useState('');
 
   const [assignDriverId, setAssignDriverId] = useState('');
 
@@ -33,12 +34,14 @@ export default function FleetManagement() {
   const handleAddVehicle = () => {
     setEditingItem(null);
     setVForm({ plateNumber: '', type: 'Box', capacity: '', brand: '', year: String(new Date().getFullYear()), fuelType: 'Solar' });
+    setVFormError('');
     setShowModal(true);
   };
 
   const handleEditVehicle = (v: IVehicle) => {
     setEditingItem(v);
     setVForm({ plateNumber: v.plateNumber, type: v.type, capacity: String(v.capacity), brand: v.brand, year: String(v.year), fuelType: v.fuelType });
+    setVFormError('');
     setShowModal(true);
   };
 
@@ -46,13 +49,25 @@ export default function FleetManagement() {
 
   const handleVehicleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setVFormError('');
     try {
       const data = { ...vForm, capacity: parseInt(vForm.capacity), year: parseInt(vForm.year) };
       if (editingItem) await vehicleApi.update(editingItem._id, data);
       else await vehicleApi.create(data);
       setShowModal(false);
       loadData();
-    } catch (err) { console.error(err); }
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const rawMsg = axiosErr?.response?.data?.message ?? '';
+      // Terjemahkan pesan error MongoDB duplikat ke bahasa yang lebih ramah
+      if (rawMsg.includes('E11000') || rawMsg.includes('duplicate') || rawMsg.includes('plateNumber')) {
+        setVFormError(`Plat nomor "${vForm.plateNumber.toUpperCase()}" sudah terdaftar. Gunakan plat nomor yang berbeda.`);
+      } else if (rawMsg) {
+        setVFormError(rawMsg);
+      } else {
+        setVFormError('Gagal menyimpan data. Silakan coba lagi.');
+      }
+    }
   };
 
 
@@ -292,10 +307,24 @@ export default function FleetManagement() {
       {tab === 'vehicles' && (
         <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingItem ? 'Edit Kendaraan' : 'Tambah Kendaraan'}>
           <form onSubmit={handleVehicleSubmit} className="space-y-4">
+            {/* Error banner */}
+            {vFormError && (
+              <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3">
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#c62828', flexShrink: 0, marginTop: 4, display: 'inline-block' }} />
+                <p className="text-xs text-red-700 font-medium leading-relaxed">{vFormError}</p>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Plat Nomor</label>
-                <input className="form-input" value={vForm.plateNumber} onChange={e => setVForm({ ...vForm, plateNumber: e.target.value })} required />
+                <label className="block text-xs font-medium text-gray-500 mb-1">Plat Nomor <span className="text-red-400">*</span></label>
+                <input
+                  className={`form-input uppercase ${vFormError && vFormError.includes('Plat nomor') ? 'border-red-400 focus:border-red-500' : ''}`}
+                  value={vForm.plateNumber}
+                  onChange={e => { setVForm({ ...vForm, plateNumber: e.target.value }); setVFormError(''); }}
+                  required
+                  placeholder="Contoh: B 1234 XYZ"
+                  style={{ textTransform: 'uppercase' }}
+                />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Jenis</label>
@@ -309,12 +338,12 @@ export default function FleetManagement() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">Kapasitas (porsi)</label>
-                <input className="form-input" type="number" value={vForm.capacity} onChange={e => setVForm({ ...vForm, capacity: e.target.value })} required />
+                <label className="block text-xs font-medium text-gray-500 mb-1">Kapasitas (porsi) <span className="text-red-400">*</span></label>
+                <input className="form-input" type="number" min="1" value={vForm.capacity} onChange={e => setVForm({ ...vForm, capacity: e.target.value })} required placeholder="Contoh: 200" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Merek</label>
-                <input className="form-input" value={vForm.brand} onChange={e => setVForm({ ...vForm, brand: e.target.value })} />
+                <input className="form-input" value={vForm.brand} onChange={e => setVForm({ ...vForm, brand: e.target.value })} placeholder="Contoh: Hino" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Bahan Bakar</label>
@@ -327,7 +356,7 @@ export default function FleetManagement() {
             </div>
             <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
               <button type="submit" className="btn-primary flex-1">Simpan</button>
-              <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">Batal</button>
+              <button type="button" onClick={() => { setShowModal(false); setVFormError(''); }} className="btn-secondary">Batal</button>
             </div>
           </form>
         </Modal>

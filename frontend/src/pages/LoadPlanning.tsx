@@ -106,7 +106,8 @@ export default function LoadPlanning() {
           >
             {calculating ? <><Hourglass size={14} /> Menghitung...</> : <><Bot size={14} /> Hitung Otomatis (FFD)</>}
           </button>
-        ) : step === 'calculated' ? null : null}
+        ) : null}
+
       </div>
 
       {/* Step indicator */}

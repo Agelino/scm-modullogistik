@@ -369,7 +369,7 @@ export default function SchoolManagement() {
           onClick={() => setActiveTab('menus')}
           type="button"
         >
-          <UtensilsCrossed size={18} /> Menu (Dummy)
+          <UtensilsCrossed size={18} /> Menu
         </button>
         <button
           className={`px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 border transition-colors ${activeTab === 'schools' ? 'bg-green-50 text-green-700 border-green-200' : 'border-transparent text-gray-600 hover:bg-gray-50'}`}
@@ -392,7 +392,7 @@ export default function SchoolManagement() {
         <div className="space-y-4">
           <div className="glass-card overflow-hidden">
             <div className="p-4 border-b border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-2"><UtensilsCrossed size={18} /> Master Menu Harian (Data Dummy)</h3>
+              <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-2"><UtensilsCrossed size={18} /> Master Menu Harian</h3>
               <p className="text-xs text-gray-400 mt-1">Menu untuk setiap hari sekolah — Senin s/d Sabtu, masing-masing 5 pilihan menu.</p>
             </div>
 

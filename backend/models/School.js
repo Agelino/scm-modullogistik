@@ -42,6 +42,17 @@ const schoolSchema = new mongoose.Schema({
   district: {
     type: String,
     default: ''
+  },
+  username: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true,
+    default: null
+  },
+  password: {
+    type: String,
+    default: null
   }
 }, {
   timestamps: true

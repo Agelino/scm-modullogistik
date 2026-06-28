@@ -12,6 +12,7 @@ export interface ISchool {
   contactPerson: string;
   phone: string;
   district: string;
+  username: string | null;
   createdAt: string;
   updatedAt: string;
 }

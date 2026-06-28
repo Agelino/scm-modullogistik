@@ -25,23 +25,67 @@ ini untuk url nya nanti di env
 | `DELETE` | `/api/schools/:id` | Hapus sekolah |
 | `GET` | `/api/schools/stats/portions` | Statistik total porsi per sekolah (untuk dashboard) |
 | `GET` | `/api/schools/geocode?q=...` | Geocoding alamat → koordinat GPS |
+| `POST` | `/api/schools/login` | **Login akun sekolah** — untuk mobile app modul feedback |
 
 **Data yang dikembalikan tiap sekolah:**
 ```json
 {
   "_id": "...",
-  "name": "SDN Menteng 01",
-  "address": "Jl. Menteng...",
-  "location": { "type": "Point", "coordinates": [106.84, -6.19] },
+  "name": "SDN Lengkong 01",
+  "address": "Jl. Lengkong Besar No.12...",
+  "location": { "type": "Point", "coordinates": [107.61, -6.92] },
   "totalStudents": 320,
   "portionsNeeded": 320,
-  "contactPerson": "...",
-  "phone": "...",
-  "district": "Jakarta Pusat"
+  "contactPerson": "Ibu Sari Mulyani",
+  "phone": "08123...",
+  "district": "Lengkong",
+  "username": "sdn_lengkong01"
 }
 ```
 
-**Dibutuhkan oleh modul:** Load Planning, Route Optimization, Live Monitoring, Analytics
+> [!NOTE]
+> Field `password` **tidak pernah dikembalikan** di response manapun (disimpan sebagai hash bcrypt di server).
+
+**`POST /api/schools/login` — untuk mobile app:**
+
+Body:
+```json
+{ "username": "sdn_lengkong01", "password": "mbg2024" }
+```
+
+Response sukses:
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "...",
+    "name": "SDN Lengkong 01",
+    "username": "sdn_lengkong01",
+    "totalStudents": 320,
+    "portionsNeeded": 320,
+    "district": "Lengkong"
+  }
+}
+```
+
+Response gagal (username/password salah):
+```json
+{ "success": false, "message": "Username atau password salah" }
+```
+
+**Alur lengkap mobile app setelah login:**
+```
+Step 1 — Login:
+  POST /api/schools/login
+  → simpan _id dari response sebagai schoolId
+
+Step 2 — Ambil data siswa sekolah ini:
+  GET /api/students/school/{schoolId}
+  → hanya mengembalikan siswa milik sekolah yang login,
+    tidak akan bocor data siswa sekolah lain
+```
+
+**Dibutuhkan oleh modul:** Load Planning, Route Optimization, Live Monitoring, Analytics, **Mobile App Feedback (login sekolah)**
 
 ---
 
@@ -328,3 +372,4 @@ Modul Produksi  ──→ /api/load-plans/ready-portions
 | Delivery plan aktif hari ini | `GET /api/load-plans` |
 | Status pengiriman realtime | `GET /api/tracking/active/all` atau Socket.io |
 | Porsi siap dari dapur | `GET /api/load-plans/ready-portions` |
+| **Login sekolah (mobile app feedback)** | **`POST /api/schools/login`** |

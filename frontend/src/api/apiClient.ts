@@ -15,6 +15,7 @@ export const schoolApi = {
   delete: (id: string) => api.delete(`/schools/${id}`),
   getPortionStats: () => api.get('/schools/stats/portions'),
   geocode: (query: string) => api.get('/schools/geocode', { params: { q: query } }),
+  login: (username: string, password: string) => api.post('/schools/login', { username, password }),
 };
 
 // ====== Students ======

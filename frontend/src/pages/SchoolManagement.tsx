@@ -96,7 +96,7 @@ export default function SchoolManagement() {
   const [selectedMenuDay, setSelectedMenuDay] = useState<DayKey>('senin');
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [menuModalSchool, setMenuModalSchool] = useState<ISchool | null>(null);
-  const [form, setForm] = useState({ name: '', address: '', lat: '', lng: '', totalStudents: '', contactPerson: '', phone: '', district: '' });
+  const [form, setForm] = useState({ name: '', address: '', lat: '', lng: '', totalStudents: '', contactPerson: '', phone: '', district: '', username: '', password: '' });
   const [geoResults, setGeoResults] = useState<{ displayName: string; lat: number; lng: number; district: string }[]>([]);
   const [geoQuery, setGeoQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -178,7 +178,7 @@ export default function SchoolManagement() {
 
   const openAddModal = () => {
     setEditingSchool(null);
-    setForm({ name: '', address: '', lat: '', lng: '', totalStudents: '', contactPerson: '', phone: '', district: '' });
+    setForm({ name: '', address: '', lat: '', lng: '', totalStudents: '', contactPerson: '', phone: '', district: '', username: '', password: '' });
     setGeoQuery('');
     setGeoResults([]);
     setShowModal(true);
@@ -195,6 +195,8 @@ export default function SchoolManagement() {
       contactPerson: school.contactPerson,
       phone: school.phone,
       district: school.district,
+      username: school.username || '',
+      password: '',
     });
     setGeoQuery(school.address || school.name);
     setGeoResults([]);
@@ -614,6 +616,7 @@ export default function SchoolManagement() {
                 <th>Siswa</th>
                 <th>Porsi</th>
                 <th>Menu Harian</th>
+                <th>Akun</th>
                 <th>Kontak</th>
                 <th>Aksi</th>
               </tr>
@@ -637,6 +640,12 @@ export default function SchoolManagement() {
                     >
                       <Calendar size={12} className="inline-block mr-1" /> {getSchoolMenuLabel(school._id)}
                     </button>
+                  </td>
+                  <td>
+                    {school.username
+                      ? <span className="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-700">{school.username}</span>
+                      : <span className="text-xs text-gray-400 italic">Belum diset</span>
+                    }
                   </td>
                   <td>
                     <p className="text-sm text-gray-600">{school.contactPerson}</p>
@@ -821,6 +830,35 @@ export default function SchoolManagement() {
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">No. Telepon</label>
               <input className="form-input" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="08xx-xxxx-xxxx" />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 p-4 space-y-3">
+            <p className="text-xs font-semibold text-gray-600">Akun Mobile App</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Username</label>
+                <input
+                  className="form-input font-mono"
+                  value={form.username}
+                  onChange={e => setForm({ ...form, username: e.target.value })}
+                  placeholder="Contoh: sdn01bandung"
+                  autoComplete="off"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">
+                  Password {editingSchool && <span className="text-gray-400 font-normal">(kosongkan jika tidak diubah)</span>}
+                </label>
+                <input
+                  className="form-input"
+                  type="password"
+                  value={form.password}
+                  onChange={e => setForm({ ...form, password: e.target.value })}
+                  placeholder={editingSchool ? '••••••••' : 'Buat password'}
+                  autoComplete="new-password"
+                />
+              </div>
             </div>
           </div>
 

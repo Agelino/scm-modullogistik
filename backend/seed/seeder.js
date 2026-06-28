@@ -1,5 +1,6 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const School = require('../models/School');
 const Student = require('../models/Student');
 const Vehicle = require('../models/Vehicle');
@@ -12,22 +13,23 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/scm_mb
 
 // ===================== SEED DATA — Bandung Area =====================
 
-const schoolsData = [
-  { name: 'SDN Lengkong 01', address: 'Jl. Lengkong Besar No.12, Lengkong, Bandung', location: { type: 'Point', coordinates: [107.6145, -6.9270] }, totalStudents: 320, portionsNeeded: 320, contactPerson: 'Ibu Sari Mulyani', phone: '081234567001', district: 'Lengkong' },
-  { name: 'SDN Turangga 03', address: 'Jl. Turangga No.8, Lengkong, Bandung', location: { type: 'Point', coordinates: [107.6312, -6.9340] }, totalStudents: 280, portionsNeeded: 280, contactPerson: 'Bapak Hendra Kusuma', phone: '081234567002', district: 'Lengkong' },
-  { name: 'SDN Buah Batu 05', address: 'Jl. Buah Batu No.25, Bandung', location: { type: 'Point', coordinates: [107.6370, -6.9425] }, totalStudents: 350, portionsNeeded: 350, contactPerson: 'Ibu Dewi Anggraeni', phone: '081234567003', district: 'Bandung Kidul' },
-  { name: 'SDN Cibeunying 02', address: 'Jl. Cibeunying Kolot No.15, Bandung', location: { type: 'Point', coordinates: [107.6250, -6.8980] }, totalStudents: 290, portionsNeeded: 290, contactPerson: 'Bapak Arif Hidayat', phone: '081234567004', district: 'Cibeunying Kaler' },
-  { name: 'SDN Dago 04', address: 'Jl. Ir. H. Juanda No.45, Dago, Bandung', location: { type: 'Point', coordinates: [107.6180, -6.8850] }, totalStudents: 310, portionsNeeded: 310, contactPerson: 'Ibu Ratna Dewi', phone: '081234567005', district: 'Coblong' },
-  { name: 'SDN Antapani 08', address: 'Jl. Antapani Lama No.18, Bandung', location: { type: 'Point', coordinates: [107.6520, -6.9120] }, totalStudents: 400, portionsNeeded: 400, contactPerson: 'Bapak Joko Prasetyo', phone: '081234567006', district: 'Antapani' },
-  { name: 'SDN Cicadas 06', address: 'Jl. Cicadas No.30, Bandung', location: { type: 'Point', coordinates: [107.6440, -6.9050] }, totalStudents: 380, portionsNeeded: 380, contactPerson: 'Ibu Linda Permatasari', phone: '081234567007', district: 'Cibeunying Kidul' },
-  { name: 'SDN Kopo 11', address: 'Jl. Kopo No.55, Bandung', location: { type: 'Point', coordinates: [107.5930, -6.9470] }, totalStudents: 260, portionsNeeded: 260, contactPerson: 'Bapak Rudi Hartono', phone: '081234567008', district: 'Bojongloa Kaler' },
-  { name: 'SDN Pasteur 09', address: 'Jl. Dr. Djunjunan No.22, Pasteur, Bandung', location: { type: 'Point', coordinates: [107.5980, -6.8930] }, totalStudents: 340, portionsNeeded: 340, contactPerson: 'Ibu Mega Sari', phone: '081234567009', district: 'Sukajadi' },
-  { name: 'SDN Cimahi 07', address: 'Jl. Raya Cimahi No.10, Bandung Barat', location: { type: 'Point', coordinates: [107.5420, -6.8850] }, totalStudents: 300, portionsNeeded: 300, contactPerson: 'Bapak Andi Firmansyah', phone: '081234567010', district: 'Cimahi Tengah' },
-  { name: 'SDN Arcamanik 12', address: 'Jl. Arcamanik Endah No.8, Bandung', location: { type: 'Point', coordinates: [107.6680, -6.9180] }, totalStudents: 270, portionsNeeded: 270, contactPerson: 'Ibu Fitri Handayani', phone: '081234567011', district: 'Arcamanik' },
-  { name: 'SDN Ujung Berung 03', address: 'Jl. AH. Nasution No.70, Bandung', location: { type: 'Point', coordinates: [107.6910, -6.9080] }, totalStudents: 330, portionsNeeded: 330, contactPerson: 'Bapak Wahyu Setiawan', phone: '081234567012', district: 'Ujung Berung' },
-  { name: 'SDN Gedebage 15', address: 'Jl. Gedebage Selatan No.20, Bandung', location: { type: 'Point', coordinates: [107.6980, -6.9420] }, totalStudents: 220, portionsNeeded: 220, contactPerson: 'Ibu Nani Sumarni', phone: '081234567013', district: 'Gedebage' },
-  { name: 'SDN Batununggal 10', address: 'Jl. Batununggal Indah No.14, Bandung', location: { type: 'Point', coordinates: [107.6350, -6.9510] }, totalStudents: 295, portionsNeeded: 295, contactPerson: 'Bapak Dedi Supriadi', phone: '081234567014', district: 'Bandung Kidul' },
-  { name: 'SDN Sukamiskin 13', address: 'Jl. Sukamiskin No.35, Bandung', location: { type: 'Point', coordinates: [107.6750, -6.9250] }, totalStudents: 360, portionsNeeded: 360, contactPerson: 'Ibu Yanti Rahayu', phone: '081234567015', district: 'Arcamanik' }
+// username: sdn_<namasingkat><nomor>, password semua: mbg2024
+const schoolsRawData = [
+  { name: 'SDN Lengkong 01',    username: 'sdn_lengkong01',    address: 'Jl. Lengkong Besar No.12, Lengkong, Bandung',      location: { type: 'Point', coordinates: [107.6145, -6.9270] }, totalStudents: 320, portionsNeeded: 320, contactPerson: 'Ibu Sari Mulyani',       phone: '081234567001', district: 'Lengkong' },
+  { name: 'SDN Turangga 03',    username: 'sdn_turangga03',    address: 'Jl. Turangga No.8, Lengkong, Bandung',             location: { type: 'Point', coordinates: [107.6312, -6.9340] }, totalStudents: 280, portionsNeeded: 280, contactPerson: 'Bapak Hendra Kusuma',   phone: '081234567002', district: 'Lengkong' },
+  { name: 'SDN Buah Batu 05',   username: 'sdn_buahbatu05',    address: 'Jl. Buah Batu No.25, Bandung',                     location: { type: 'Point', coordinates: [107.6370, -6.9425] }, totalStudents: 350, portionsNeeded: 350, contactPerson: 'Ibu Dewi Anggraeni',    phone: '081234567003', district: 'Bandung Kidul' },
+  { name: 'SDN Cibeunying 02',  username: 'sdn_cibeunying02',  address: 'Jl. Cibeunying Kolot No.15, Bandung',              location: { type: 'Point', coordinates: [107.6250, -6.8980] }, totalStudents: 290, portionsNeeded: 290, contactPerson: 'Bapak Arif Hidayat',    phone: '081234567004', district: 'Cibeunying Kaler' },
+  { name: 'SDN Dago 04',        username: 'sdn_dago04',        address: 'Jl. Ir. H. Juanda No.45, Dago, Bandung',           location: { type: 'Point', coordinates: [107.6180, -6.8850] }, totalStudents: 310, portionsNeeded: 310, contactPerson: 'Ibu Ratna Dewi',        phone: '081234567005', district: 'Coblong' },
+  { name: 'SDN Antapani 08',    username: 'sdn_antapani08',    address: 'Jl. Antapani Lama No.18, Bandung',                 location: { type: 'Point', coordinates: [107.6520, -6.9120] }, totalStudents: 400, portionsNeeded: 400, contactPerson: 'Bapak Joko Prasetyo',   phone: '081234567006', district: 'Antapani' },
+  { name: 'SDN Cicadas 06',     username: 'sdn_cicadas06',     address: 'Jl. Cicadas No.30, Bandung',                       location: { type: 'Point', coordinates: [107.6440, -6.9050] }, totalStudents: 380, portionsNeeded: 380, contactPerson: 'Ibu Linda Permatasari', phone: '081234567007', district: 'Cibeunying Kidul' },
+  { name: 'SDN Kopo 11',        username: 'sdn_kopo11',        address: 'Jl. Kopo No.55, Bandung',                          location: { type: 'Point', coordinates: [107.5930, -6.9470] }, totalStudents: 260, portionsNeeded: 260, contactPerson: 'Bapak Rudi Hartono',    phone: '081234567008', district: 'Bojongloa Kaler' },
+  { name: 'SDN Pasteur 09',     username: 'sdn_pasteur09',     address: 'Jl. Dr. Djunjunan No.22, Pasteur, Bandung',        location: { type: 'Point', coordinates: [107.5980, -6.8930] }, totalStudents: 340, portionsNeeded: 340, contactPerson: 'Ibu Mega Sari',         phone: '081234567009', district: 'Sukajadi' },
+  { name: 'SDN Cimahi 07',      username: 'sdn_cimahi07',      address: 'Jl. Raya Cimahi No.10, Bandung Barat',             location: { type: 'Point', coordinates: [107.5420, -6.8850] }, totalStudents: 300, portionsNeeded: 300, contactPerson: 'Bapak Andi Firmansyah', phone: '081234567010', district: 'Cimahi Tengah' },
+  { name: 'SDN Arcamanik 12',   username: 'sdn_arcamanik12',   address: 'Jl. Arcamanik Endah No.8, Bandung',               location: { type: 'Point', coordinates: [107.6680, -6.9180] }, totalStudents: 270, portionsNeeded: 270, contactPerson: 'Ibu Fitri Handayani',   phone: '081234567011', district: 'Arcamanik' },
+  { name: 'SDN Ujung Berung 03',username: 'sdn_ujungberung03', address: 'Jl. AH. Nasution No.70, Bandung',                 location: { type: 'Point', coordinates: [107.6910, -6.9080] }, totalStudents: 330, portionsNeeded: 330, contactPerson: 'Bapak Wahyu Setiawan',  phone: '081234567012', district: 'Ujung Berung' },
+  { name: 'SDN Gedebage 15',    username: 'sdn_gedebage15',    address: 'Jl. Gedebage Selatan No.20, Bandung',              location: { type: 'Point', coordinates: [107.6980, -6.9420] }, totalStudents: 220, portionsNeeded: 220, contactPerson: 'Ibu Nani Sumarni',      phone: '081234567013', district: 'Gedebage' },
+  { name: 'SDN Batununggal 10', username: 'sdn_batununggal10', address: 'Jl. Batununggal Indah No.14, Bandung',             location: { type: 'Point', coordinates: [107.6350, -6.9510] }, totalStudents: 295, portionsNeeded: 295, contactPerson: 'Bapak Dedi Supriadi',   phone: '081234567014', district: 'Bandung Kidul' },
+  { name: 'SDN Sukamiskin 13',  username: 'sdn_sukamiskin13',  address: 'Jl. Sukamiskin No.35, Bandung',                   location: { type: 'Point', coordinates: [107.6750, -6.9250] }, totalStudents: 360, portionsNeeded: 360, contactPerson: 'Ibu Yanti Rahayu',      phone: '081234567015', district: 'Arcamanik' },
 ];
 
 const vehiclesData = [
@@ -97,10 +99,12 @@ async function seedDatabase() {
     });
     console.log('   ✅ Settings dapur berhasil dikonfigurasi (Bandung)');
 
-    // Seed schools
+    // Seed schools (dengan akun — password di-hash sebelum insert)
     console.log('🏫 Seeding schools...');
+    const passwordHash = await bcrypt.hash('mbg2024', 10);
+    const schoolsData = schoolsRawData.map(s => ({ ...s, password: passwordHash }));
     const schools = await School.insertMany(schoolsData);
-    console.log(`   ✅ ${schools.length} sekolah berhasil ditambahkan`);
+    console.log(`   ✅ ${schools.length} sekolah berhasil ditambahkan (akun: password=mbg2024)`);
 
     // Seed students
     console.log('👩‍🎓 Seeding students...');
@@ -207,7 +211,7 @@ async function seedDatabase() {
     console.log('\n🎉 Seeding complete!');
     console.log('📊 Summary:');
     console.log(`   Lokasi Dapur: MBG Dapur Lengkong Turangga 2 (Bandung)`);
-    console.log(`   Sekolah: ${schools.length}`);
+    console.log(`   Sekolah: ${schools.length} (akun mobile: username=sdn_<nama>, password=mbg2024)`);
     console.log(`   Siswa: ${students.length}`);
     console.log(`   Kendaraan: ${vehicles.length}`);
     console.log(`   Driver: ${drivers.length}`);

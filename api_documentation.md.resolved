@@ -310,7 +310,7 @@ ini untuk url nya nanti di env
 ## 🗂️ Ringkasan Ketergantungan Antar Modul
 
 ```
-Modul Produksi (Noval) ──→ /api/load-plans/ready-portions
+Modul Produksi  ──→ /api/load-plans/ready-portions
                                     ↓
                          /api/load-plans/calculate (FFD)
                                     ↓

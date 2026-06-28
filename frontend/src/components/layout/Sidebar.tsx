@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router';
-import { LayoutDashboard, School, Truck, Package, Map, Radio, CheckCircle, TrendingUp, LogOut } from 'lucide-react';
+import { LayoutDashboard, School, Truck, Package, Map, Radio, CheckCircle, TrendingUp, LogOut, Settings } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -12,6 +12,7 @@ const menuItems: { path: string; label: string; icon: LucideIcon }[] = [
   { path: '/live-monitoring', label: 'Live Monitoring', icon: Radio },
   { path: '/proof-of-delivery', label: 'Bukti Pengiriman', icon: CheckCircle },
   { path: '/analytics', label: 'Analisis Performa', icon: TrendingUp },
+  { path: '/settings', label: 'Pengaturan', icon: Settings },
 ];
 
 const roleLabels: Record<string, string> = {

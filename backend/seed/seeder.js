@@ -6,56 +6,57 @@ const Vehicle = require('../models/Vehicle');
 const Driver = require('../models/Driver');
 const DeliveryPlan = require('../models/DeliveryPlan');
 const Delivery = require('../models/Delivery');
+const Settings = require('../models/Settings');
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/scm_mbg';
 
-// ===================== SEED DATA =====================
+// ===================== SEED DATA — Bandung Area =====================
 
 const schoolsData = [
-  { name: 'SDN Menteng 01', address: 'Jl. Besuki No.2, Menteng, Jakarta Pusat', location: { type: 'Point', coordinates: [106.8370, -6.1944] }, totalStudents: 320, portionsNeeded: 320, contactPerson: 'Ibu Sari', phone: '081234567001', district: 'Jakarta Pusat' },
-  { name: 'SDN Cikini 02', address: 'Jl. Cikini Raya No.15, Jakarta Pusat', location: { type: 'Point', coordinates: [106.8412, -6.1889] }, totalStudents: 280, portionsNeeded: 280, contactPerson: 'Bapak Hendra', phone: '081234567002', district: 'Jakarta Pusat' },
-  { name: 'SDN Kebayoran Lama 05', address: 'Jl. Ciputat Raya No.10, Jakarta Selatan', location: { type: 'Point', coordinates: [106.7820, -6.2501] }, totalStudents: 350, portionsNeeded: 350, contactPerson: 'Ibu Dewi', phone: '081234567003', district: 'Jakarta Selatan' },
-  { name: 'SDN Tebet Barat 01', address: 'Jl. Tebet Barat Dalam IV, Jakarta Selatan', location: { type: 'Point', coordinates: [106.8530, -6.2310] }, totalStudents: 290, portionsNeeded: 290, contactPerson: 'Bapak Arif', phone: '081234567004', district: 'Jakarta Selatan' },
-  { name: 'SDN Rawamangun 12', address: 'Jl. Pemuda No.45, Jakarta Timur', location: { type: 'Point', coordinates: [106.8850, -6.1950] }, totalStudents: 310, portionsNeeded: 310, contactPerson: 'Ibu Ratna', phone: '081234567005', district: 'Jakarta Timur' },
-  { name: 'SDN Cakung 08', address: 'Jl. Raya Cakung No.12, Jakarta Timur', location: { type: 'Point', coordinates: [106.9320, -6.1780] }, totalStudents: 400, portionsNeeded: 400, contactPerson: 'Bapak Joko', phone: '081234567006', district: 'Jakarta Timur' },
-  { name: 'SDN Kelapa Gading 03', address: 'Jl. Boulevard Raya, Jakarta Utara', location: { type: 'Point', coordinates: [106.9050, -6.1570] }, totalStudents: 380, portionsNeeded: 380, contactPerson: 'Ibu Linda', phone: '081234567007', district: 'Jakarta Utara' },
-  { name: 'SDN Tanjung Priok 04', address: 'Jl. Enggano No.20, Jakarta Utara', location: { type: 'Point', coordinates: [106.8780, -6.1200] }, totalStudents: 260, portionsNeeded: 260, contactPerson: 'Bapak Rudi', phone: '081234567008', district: 'Jakarta Utara' },
-  { name: 'SDN Cengkareng 11', address: 'Jl. Daan Mogot KM.14, Jakarta Barat', location: { type: 'Point', coordinates: [106.7230, -6.1520] }, totalStudents: 340, portionsNeeded: 340, contactPerson: 'Ibu Mega', phone: '081234567009', district: 'Jakarta Barat' },
-  { name: 'SDN Grogol 06', address: 'Jl. Prof. Dr. Latumeten No.5, Jakarta Barat', location: { type: 'Point', coordinates: [106.7950, -6.1610] }, totalStudents: 300, portionsNeeded: 300, contactPerson: 'Bapak Andi', phone: '081234567010', district: 'Jakarta Barat' },
-  { name: 'SDN Kemayoran 09', address: 'Jl. Bungur Besar No.8, Jakarta Pusat', location: { type: 'Point', coordinates: [106.8560, -6.1650] }, totalStudents: 270, portionsNeeded: 270, contactPerson: 'Ibu Fitri', phone: '081234567011', district: 'Jakarta Pusat' },
-  { name: 'SDN Pasar Minggu 07', address: 'Jl. Ragunan No.18, Jakarta Selatan', location: { type: 'Point', coordinates: [106.8310, -6.2850] }, totalStudents: 330, portionsNeeded: 330, contactPerson: 'Bapak Wahyu', phone: '081234567012', district: 'Jakarta Selatan' },
-  { name: 'SDN Cilincing 15', address: 'Jl. Cilincing Raya No.25, Jakarta Utara', location: { type: 'Point', coordinates: [106.9400, -6.1100] }, totalStudents: 220, portionsNeeded: 220, contactPerson: 'Ibu Nani', phone: '081234567013', district: 'Jakarta Utara' },
-  { name: 'SDN Jatinegara 03', address: 'Jl. Matraman Raya No.32, Jakarta Timur', location: { type: 'Point', coordinates: [106.8670, -6.2130] }, totalStudents: 295, portionsNeeded: 295, contactPerson: 'Bapak Dedi', phone: '081234567014', district: 'Jakarta Timur' },
-  { name: 'SDN Tambora 10', address: 'Jl. KH. Mas Mansyur No.50, Jakarta Barat', location: { type: 'Point', coordinates: [106.8130, -6.1480] }, totalStudents: 360, portionsNeeded: 360, contactPerson: 'Ibu Yanti', phone: '081234567015', district: 'Jakarta Barat' }
+  { name: 'SDN Lengkong 01', address: 'Jl. Lengkong Besar No.12, Lengkong, Bandung', location: { type: 'Point', coordinates: [107.6145, -6.9270] }, totalStudents: 320, portionsNeeded: 320, contactPerson: 'Ibu Sari Mulyani', phone: '081234567001', district: 'Lengkong' },
+  { name: 'SDN Turangga 03', address: 'Jl. Turangga No.8, Lengkong, Bandung', location: { type: 'Point', coordinates: [107.6312, -6.9340] }, totalStudents: 280, portionsNeeded: 280, contactPerson: 'Bapak Hendra Kusuma', phone: '081234567002', district: 'Lengkong' },
+  { name: 'SDN Buah Batu 05', address: 'Jl. Buah Batu No.25, Bandung', location: { type: 'Point', coordinates: [107.6370, -6.9425] }, totalStudents: 350, portionsNeeded: 350, contactPerson: 'Ibu Dewi Anggraeni', phone: '081234567003', district: 'Bandung Kidul' },
+  { name: 'SDN Cibeunying 02', address: 'Jl. Cibeunying Kolot No.15, Bandung', location: { type: 'Point', coordinates: [107.6250, -6.8980] }, totalStudents: 290, portionsNeeded: 290, contactPerson: 'Bapak Arif Hidayat', phone: '081234567004', district: 'Cibeunying Kaler' },
+  { name: 'SDN Dago 04', address: 'Jl. Ir. H. Juanda No.45, Dago, Bandung', location: { type: 'Point', coordinates: [107.6180, -6.8850] }, totalStudents: 310, portionsNeeded: 310, contactPerson: 'Ibu Ratna Dewi', phone: '081234567005', district: 'Coblong' },
+  { name: 'SDN Antapani 08', address: 'Jl. Antapani Lama No.18, Bandung', location: { type: 'Point', coordinates: [107.6520, -6.9120] }, totalStudents: 400, portionsNeeded: 400, contactPerson: 'Bapak Joko Prasetyo', phone: '081234567006', district: 'Antapani' },
+  { name: 'SDN Cicadas 06', address: 'Jl. Cicadas No.30, Bandung', location: { type: 'Point', coordinates: [107.6440, -6.9050] }, totalStudents: 380, portionsNeeded: 380, contactPerson: 'Ibu Linda Permatasari', phone: '081234567007', district: 'Cibeunying Kidul' },
+  { name: 'SDN Kopo 11', address: 'Jl. Kopo No.55, Bandung', location: { type: 'Point', coordinates: [107.5930, -6.9470] }, totalStudents: 260, portionsNeeded: 260, contactPerson: 'Bapak Rudi Hartono', phone: '081234567008', district: 'Bojongloa Kaler' },
+  { name: 'SDN Pasteur 09', address: 'Jl. Dr. Djunjunan No.22, Pasteur, Bandung', location: { type: 'Point', coordinates: [107.5980, -6.8930] }, totalStudents: 340, portionsNeeded: 340, contactPerson: 'Ibu Mega Sari', phone: '081234567009', district: 'Sukajadi' },
+  { name: 'SDN Cimahi 07', address: 'Jl. Raya Cimahi No.10, Bandung Barat', location: { type: 'Point', coordinates: [107.5420, -6.8850] }, totalStudents: 300, portionsNeeded: 300, contactPerson: 'Bapak Andi Firmansyah', phone: '081234567010', district: 'Cimahi Tengah' },
+  { name: 'SDN Arcamanik 12', address: 'Jl. Arcamanik Endah No.8, Bandung', location: { type: 'Point', coordinates: [107.6680, -6.9180] }, totalStudents: 270, portionsNeeded: 270, contactPerson: 'Ibu Fitri Handayani', phone: '081234567011', district: 'Arcamanik' },
+  { name: 'SDN Ujung Berung 03', address: 'Jl. AH. Nasution No.70, Bandung', location: { type: 'Point', coordinates: [107.6910, -6.9080] }, totalStudents: 330, portionsNeeded: 330, contactPerson: 'Bapak Wahyu Setiawan', phone: '081234567012', district: 'Ujung Berung' },
+  { name: 'SDN Gedebage 15', address: 'Jl. Gedebage Selatan No.20, Bandung', location: { type: 'Point', coordinates: [107.6980, -6.9420] }, totalStudents: 220, portionsNeeded: 220, contactPerson: 'Ibu Nani Sumarni', phone: '081234567013', district: 'Gedebage' },
+  { name: 'SDN Batununggal 10', address: 'Jl. Batununggal Indah No.14, Bandung', location: { type: 'Point', coordinates: [107.6350, -6.9510] }, totalStudents: 295, portionsNeeded: 295, contactPerson: 'Bapak Dedi Supriadi', phone: '081234567014', district: 'Bandung Kidul' },
+  { name: 'SDN Sukamiskin 13', address: 'Jl. Sukamiskin No.35, Bandung', location: { type: 'Point', coordinates: [107.6750, -6.9250] }, totalStudents: 360, portionsNeeded: 360, contactPerson: 'Ibu Yanti Rahayu', phone: '081234567015', district: 'Arcamanik' }
 ];
 
 const vehiclesData = [
-  { plateNumber: 'B 1234 MBG', type: 'Box', capacity: 500, status: 'available', brand: 'Mitsubishi Colt Diesel', year: 2023, fuelType: 'Solar', currentLocation: { type: 'Point', coordinates: [106.8456, -6.2088] } },
-  { plateNumber: 'B 5678 MBG', type: 'Box', capacity: 500, status: 'available', brand: 'Isuzu Elf', year: 2023, fuelType: 'Solar', currentLocation: { type: 'Point', coordinates: [106.8456, -6.2088] } },
-  { plateNumber: 'B 9012 MBG', type: 'Van', capacity: 350, status: 'available', brand: 'Toyota HiAce', year: 2024, fuelType: 'Solar', currentLocation: { type: 'Point', coordinates: [106.8456, -6.2088] } },
-  { plateNumber: 'B 3456 MBG', type: 'Van', capacity: 350, status: 'available', brand: 'Daihatsu Gran Max', year: 2023, fuelType: 'Bensin', currentLocation: { type: 'Point', coordinates: [106.8456, -6.2088] } },
-  { plateNumber: 'B 7890 MBG', type: 'Pick Up', capacity: 250, status: 'available', brand: 'Suzuki Carry', year: 2024, fuelType: 'Bensin', currentLocation: { type: 'Point', coordinates: [106.8456, -6.2088] } },
-  { plateNumber: 'B 2345 MBG', type: 'Pick Up', capacity: 250, status: 'maintenance', brand: 'Mitsubishi L300', year: 2022, fuelType: 'Solar', currentLocation: { type: 'Point', coordinates: [106.8456, -6.2088] } },
-  { plateNumber: 'B 6789 MBG', type: 'Truck', capacity: 800, status: 'available', brand: 'Hino Dutro', year: 2023, fuelType: 'Solar', currentLocation: { type: 'Point', coordinates: [106.8456, -6.2088] } },
-  { plateNumber: 'B 1357 MBG', type: 'Box', capacity: 450, status: 'available', brand: 'Mitsubishi Canter', year: 2024, fuelType: 'Solar', currentLocation: { type: 'Point', coordinates: [106.8456, -6.2088] } }
+  { plateNumber: 'D 1234 MBG', type: 'Box', capacity: 500, status: 'available', brand: 'Mitsubishi Colt Diesel', year: 2023, fuelType: 'Solar', currentLocation: { type: 'Point', coordinates: [107.6333, -6.9367] } },
+  { plateNumber: 'D 5678 MBG', type: 'Box', capacity: 500, status: 'available', brand: 'Isuzu Elf', year: 2023, fuelType: 'Solar', currentLocation: { type: 'Point', coordinates: [107.6333, -6.9367] } },
+  { plateNumber: 'D 9012 MBG', type: 'Van', capacity: 350, status: 'available', brand: 'Toyota HiAce', year: 2024, fuelType: 'Solar', currentLocation: { type: 'Point', coordinates: [107.6333, -6.9367] } },
+  { plateNumber: 'D 3456 MBG', type: 'Van', capacity: 350, status: 'available', brand: 'Daihatsu Gran Max', year: 2023, fuelType: 'Bensin', currentLocation: { type: 'Point', coordinates: [107.6333, -6.9367] } },
+  { plateNumber: 'D 7890 MBG', type: 'Pick Up', capacity: 250, status: 'available', brand: 'Suzuki Carry', year: 2024, fuelType: 'Bensin', currentLocation: { type: 'Point', coordinates: [107.6333, -6.9367] } },
+  { plateNumber: 'D 2345 MBG', type: 'Pick Up', capacity: 250, status: 'maintenance', brand: 'Mitsubishi L300', year: 2022, fuelType: 'Solar', currentLocation: { type: 'Point', coordinates: [107.6333, -6.9367] } },
+  { plateNumber: 'D 6789 MBG', type: 'Truck', capacity: 800, status: 'available', brand: 'Hino Dutro', year: 2023, fuelType: 'Solar', currentLocation: { type: 'Point', coordinates: [107.6333, -6.9367] } },
+  { plateNumber: 'D 1357 MBG', type: 'Box', capacity: 450, status: 'available', brand: 'Mitsubishi Canter', year: 2024, fuelType: 'Solar', currentLocation: { type: 'Point', coordinates: [107.6333, -6.9367] } }
 ];
 
 const driversData = [
-  { employeeId: 'DRV-001', name: 'Ahmad Suryadi', phone: '081298765001', licenseNumber: 'SIM-B1-001', licenseExpiry: new Date('2027-06-15'), address: 'Jl. Kebon Sirih No.12, Jakarta Pusat', joinDate: new Date('2022-01-10'), status: 'available', rating: 4.8, totalDeliveries: 156 },
-  { employeeId: 'DRV-002', name: 'Budi Santoso', phone: '081298765002', licenseNumber: 'SIM-B1-002', licenseExpiry: new Date('2027-03-20'), address: 'Jl. Cempaka Putih III No.5, Jakarta Pusat', joinDate: new Date('2022-03-05'), status: 'available', rating: 4.6, totalDeliveries: 142 },
-  { employeeId: 'DRV-003', name: 'Cahyo Prabowo', phone: '081298765003', licenseNumber: 'SIM-B1-003', licenseExpiry: new Date('2028-01-10'), address: 'Jl. Tebet Utara No.22, Jakarta Selatan', joinDate: new Date('2021-08-15'), status: 'available', rating: 4.9, totalDeliveries: 189 },
-  { employeeId: 'DRV-004', name: 'Dimas Pratama', phone: '081298765004', licenseNumber: 'SIM-B1-004', licenseExpiry: new Date('2027-09-05'), address: 'Jl. Rawamangun Muka No.8, Jakarta Timur', joinDate: new Date('2023-02-01'), status: 'busy', rating: 4.5, totalDeliveries: 98 },
-  { employeeId: 'DRV-005', name: 'Eko Widodo', phone: '081298765005', licenseNumber: 'SIM-B1-005', licenseExpiry: new Date('2027-12-30'), address: 'Jl. Pluit Karang No.15, Jakarta Utara', joinDate: new Date('2021-05-20'), status: 'available', rating: 4.7, totalDeliveries: 167 },
-  { employeeId: 'DRV-006', name: 'Fajar Nugroho', phone: '081298765006', licenseNumber: 'SIM-B1-006', licenseExpiry: new Date('2026-11-18'), address: 'Jl. Daan Mogot KM.12, Jakarta Barat', joinDate: new Date('2023-06-10'), status: 'offline', rating: 4.4, totalDeliveries: 73 },
-  { employeeId: 'DRV-007', name: 'Gunawan Setiawan', phone: '081298765007', licenseNumber: 'SIM-B1-007', licenseExpiry: new Date('2028-04-22'), address: 'Jl. Sunter Agung No.30, Jakarta Utara', joinDate: new Date('2020-11-01'), status: 'available', rating: 4.8, totalDeliveries: 201 },
-  { employeeId: 'DRV-008', name: 'Hadi Wijaya', phone: '081298765008', licenseNumber: 'SIM-B1-008', licenseExpiry: new Date('2027-07-14'), address: 'Jl. Kebayoran Baru No.7, Jakarta Selatan', joinDate: new Date('2024-01-15'), status: 'available', rating: 4.3, totalDeliveries: 65 },
-  { employeeId: 'DRV-009', name: 'Irfan Hakim', phone: '081298765009', licenseNumber: 'SIM-B1-009', licenseExpiry: new Date('2028-02-28'), address: 'Jl. Cakung Cilincing No.45, Jakarta Timur', joinDate: new Date('2022-07-20'), status: 'available', rating: 4.6, totalDeliveries: 134 },
-  { employeeId: 'DRV-010', name: 'Joko Susilo', phone: '081298765010', licenseNumber: 'SIM-B1-010', licenseExpiry: new Date('2027-08-10'), address: 'Jl. Kemang Raya No.18, Jakarta Selatan', joinDate: new Date('2021-12-08'), status: 'available', rating: 4.7, totalDeliveries: 178 },
-  { employeeId: 'DRV-011', name: 'Kurniawan Adi', phone: '081298765011', licenseNumber: 'SIM-B1-011', licenseExpiry: new Date('2026-10-05'), address: 'Jl. Grogol Petamburan No.9, Jakarta Barat', joinDate: new Date('2023-04-01'), status: 'busy', rating: 4.4, totalDeliveries: 87 },
-  { employeeId: 'DRV-012', name: 'Lukman Fauzi', phone: '081298765012', licenseNumber: 'SIM-B1-012', licenseExpiry: new Date('2028-05-15'), address: 'Jl. Pademangan III No.21, Jakarta Utara', joinDate: new Date('2022-09-15'), status: 'available', rating: 4.5, totalDeliveries: 112 },
-  { employeeId: 'DRV-013', name: 'Mulyadi Rahman', phone: '081298765013', licenseNumber: 'SIM-B1-013', licenseExpiry: new Date('2027-11-20'), address: 'Jl. Cipulir Raya No.33, Jakarta Selatan', joinDate: new Date('2023-01-10'), status: 'offline', rating: 4.2, totalDeliveries: 56 },
-  { employeeId: 'DRV-014', name: 'Naufal Hidayat', phone: '081298765014', licenseNumber: 'SIM-B1-014', licenseExpiry: new Date('2028-03-08'), address: 'Jl. Pulomas Barat No.11, Jakarta Timur', joinDate: new Date('2021-10-25'), status: 'available', rating: 4.8, totalDeliveries: 195 },
-  { employeeId: 'DRV-015', name: 'Oscar Firmansyah', phone: '081298765015', licenseNumber: 'SIM-B1-015', licenseExpiry: new Date('2027-06-30'), address: 'Jl. Tanjung Duren No.14, Jakarta Barat', joinDate: new Date('2024-03-01'), status: 'available', rating: 4.1, totalDeliveries: 38 }
+  { employeeId: 'DRV-001', name: 'Ahmad Suryadi', phone: '081298765001', licenseNumber: 'SIM-B1-001', licenseExpiry: new Date('2027-06-15'), address: 'Jl. Merdeka No.12, Bandung', joinDate: new Date('2022-01-10'), status: 'available', rating: 4.8, totalDeliveries: 156 },
+  { employeeId: 'DRV-002', name: 'Budi Santoso', phone: '081298765002', licenseNumber: 'SIM-B1-002', licenseExpiry: new Date('2027-03-20'), address: 'Jl. Braga No.5, Bandung', joinDate: new Date('2022-03-05'), status: 'available', rating: 4.6, totalDeliveries: 142 },
+  { employeeId: 'DRV-003', name: 'Cahyo Prabowo', phone: '081298765003', licenseNumber: 'SIM-B1-003', licenseExpiry: new Date('2028-01-10'), address: 'Jl. Buah Batu No.22, Bandung', joinDate: new Date('2021-08-15'), status: 'available', rating: 4.9, totalDeliveries: 189 },
+  { employeeId: 'DRV-004', name: 'Dimas Pratama', phone: '081298765004', licenseNumber: 'SIM-B1-004', licenseExpiry: new Date('2027-09-05'), address: 'Jl. Dago Atas No.8, Bandung', joinDate: new Date('2023-02-01'), status: 'busy', rating: 4.5, totalDeliveries: 98 },
+  { employeeId: 'DRV-005', name: 'Eko Widodo', phone: '081298765005', licenseNumber: 'SIM-B1-005', licenseExpiry: new Date('2027-12-30'), address: 'Jl. Pasteur No.15, Bandung', joinDate: new Date('2021-05-20'), status: 'available', rating: 4.7, totalDeliveries: 167 },
+  { employeeId: 'DRV-006', name: 'Fajar Nugroho', phone: '081298765006', licenseNumber: 'SIM-B1-006', licenseExpiry: new Date('2026-11-18'), address: 'Jl. Soekarno Hatta No.80, Bandung', joinDate: new Date('2023-06-10'), status: 'offline', rating: 4.4, totalDeliveries: 73 },
+  { employeeId: 'DRV-007', name: 'Gunawan Setiawan', phone: '081298765007', licenseNumber: 'SIM-B1-007', licenseExpiry: new Date('2028-04-22'), address: 'Jl. Cihampelas No.30, Bandung', joinDate: new Date('2020-11-01'), status: 'available', rating: 4.8, totalDeliveries: 201 },
+  { employeeId: 'DRV-008', name: 'Hadi Wijaya', phone: '081298765008', licenseNumber: 'SIM-B1-008', licenseExpiry: new Date('2027-07-14'), address: 'Jl. Riau No.7, Bandung', joinDate: new Date('2024-01-15'), status: 'available', rating: 4.3, totalDeliveries: 65 },
+  { employeeId: 'DRV-009', name: 'Irfan Hakim', phone: '081298765009', licenseNumber: 'SIM-B1-009', licenseExpiry: new Date('2028-02-28'), address: 'Jl. Antapani No.45, Bandung', joinDate: new Date('2022-07-20'), status: 'available', rating: 4.6, totalDeliveries: 134 },
+  { employeeId: 'DRV-010', name: 'Joko Susilo', phone: '081298765010', licenseNumber: 'SIM-B1-010', licenseExpiry: new Date('2027-08-10'), address: 'Jl. Setiabudi No.18, Bandung', joinDate: new Date('2021-12-08'), status: 'available', rating: 4.7, totalDeliveries: 178 },
+  { employeeId: 'DRV-011', name: 'Kurniawan Adi', phone: '081298765011', licenseNumber: 'SIM-B1-011', licenseExpiry: new Date('2026-10-05'), address: 'Jl. Kopo Jaya No.9, Bandung', joinDate: new Date('2023-04-01'), status: 'busy', rating: 4.4, totalDeliveries: 87 },
+  { employeeId: 'DRV-012', name: 'Lukman Fauzi', phone: '081298765012', licenseNumber: 'SIM-B1-012', licenseExpiry: new Date('2028-05-15'), address: 'Jl. Gatot Subroto No.21, Bandung', joinDate: new Date('2022-09-15'), status: 'available', rating: 4.5, totalDeliveries: 112 },
+  { employeeId: 'DRV-013', name: 'Mulyadi Rahman', phone: '081298765013', licenseNumber: 'SIM-B1-013', licenseExpiry: new Date('2027-11-20'), address: 'Jl. Supratman No.33, Bandung', joinDate: new Date('2023-01-10'), status: 'offline', rating: 4.2, totalDeliveries: 56 },
+  { employeeId: 'DRV-014', name: 'Naufal Hidayat', phone: '081298765014', licenseNumber: 'SIM-B1-014', licenseExpiry: new Date('2028-03-08'), address: 'Jl. Ujung Berung No.11, Bandung', joinDate: new Date('2021-10-25'), status: 'available', rating: 4.8, totalDeliveries: 195 },
+  { employeeId: 'DRV-015', name: 'Oscar Firmansyah', phone: '081298765015', licenseNumber: 'SIM-B1-015', licenseExpiry: new Date('2027-06-30'), address: 'Jl. Cimahi Raya No.14, Cimahi', joinDate: new Date('2024-03-01'), status: 'available', rating: 4.1, totalDeliveries: 38 }
 ];
 
 const studentNamePool = [
@@ -80,8 +81,21 @@ async function seedDatabase() {
       Vehicle.deleteMany({}),
       Driver.deleteMany({}),
       DeliveryPlan.deleteMany({}),
-      Delivery.deleteMany({})
+      Delivery.deleteMany({}),
+      Settings.deleteMany({})
     ]);
+
+    // Seed settings (kitchen location — Bandung)
+    console.log('⚙️  Seeding settings...');
+    await Settings.create({
+      key: 'general',
+      kitchen: {
+        name: 'MBG Dapur Lengkong Turangga 2',
+        address: 'Jl. Salendro Utara No.20, Turangga, Kec. Lengkong, Kota Bandung, Jawa Barat 40264',
+        location: { type: 'Point', coordinates: [107.6333003, -6.9366717] }
+      }
+    });
+    console.log('   ✅ Settings dapur berhasil dikonfigurasi (Bandung)');
 
     // Seed schools
     console.log('🏫 Seeding schools...');
@@ -120,14 +134,14 @@ async function seedDatabase() {
     // Assign drivers to vehicles (each vehicle gets 2-3 drivers)
     console.log('🔗 Assigning drivers to vehicles...');
     const driverAssignments = [
-      { vehicleIdx: 0, driverIdxs: [0, 3, 8] },      // B 1234 MBG -> Ahmad, Dimas, Irfan
-      { vehicleIdx: 1, driverIdxs: [1, 9] },           // B 5678 MBG -> Budi, Joko
-      { vehicleIdx: 2, driverIdxs: [2, 4, 11] },       // B 9012 MBG -> Cahyo, Eko, Lukman
-      { vehicleIdx: 3, driverIdxs: [5, 10] },           // B 3456 MBG -> Fajar, Kurniawan
-      { vehicleIdx: 4, driverIdxs: [6, 13] },           // B 7890 MBG -> Gunawan, Naufal
-      { vehicleIdx: 5, driverIdxs: [7, 12] },           // B 2345 MBG -> Hadi, Mulyadi
-      { vehicleIdx: 6, driverIdxs: [0, 2, 14] },        // B 6789 MBG -> Ahmad, Cahyo, Oscar
-      { vehicleIdx: 7, driverIdxs: [1, 4, 9] },         // B 1357 MBG -> Budi, Eko, Joko
+      { vehicleIdx: 0, driverIdxs: [0, 3, 8] },      // D 1234 MBG -> Ahmad, Dimas, Irfan
+      { vehicleIdx: 1, driverIdxs: [1, 9] },           // D 5678 MBG -> Budi, Joko
+      { vehicleIdx: 2, driverIdxs: [2, 4, 11] },       // D 9012 MBG -> Cahyo, Eko, Lukman
+      { vehicleIdx: 3, driverIdxs: [5, 10] },           // D 3456 MBG -> Fajar, Kurniawan
+      { vehicleIdx: 4, driverIdxs: [6, 13] },           // D 7890 MBG -> Gunawan, Naufal
+      { vehicleIdx: 5, driverIdxs: [7, 12] },           // D 2345 MBG -> Hadi, Mulyadi
+      { vehicleIdx: 6, driverIdxs: [0, 2, 14] },        // D 6789 MBG -> Ahmad, Cahyo, Oscar
+      { vehicleIdx: 7, driverIdxs: [1, 4, 9] },         // D 1357 MBG -> Budi, Eko, Joko
     ];
     for (const assignment of driverAssignments) {
       await Vehicle.findByIdAndUpdate(vehicles[assignment.vehicleIdx]._id, {
@@ -181,8 +195,8 @@ async function seedDatabase() {
     // Create sample deliveries (proof of delivery)
     console.log('📦 Creating sample deliveries...');
     await Delivery.insertMany([
-      { deliveryPlan: plan1._id, school: schools[0]._id, driver: drivers[0]._id, portions: schools[0].portionsNeeded, status: 'delivered', receivedBy: 'Ibu Sari', receivedAt: new Date(today.setHours(7, 45)), notes: 'Diterima dengan baik' },
-      { deliveryPlan: plan1._id, school: schools[1]._id, driver: drivers[0]._id, portions: schools[1].portionsNeeded, status: 'delivered', receivedBy: 'Bapak Hendra', receivedAt: new Date(today.setHours(8, 10)), notes: 'Semua porsi lengkap' },
+      { deliveryPlan: plan1._id, school: schools[0]._id, driver: drivers[0]._id, portions: schools[0].portionsNeeded, status: 'delivered', receivedBy: 'Ibu Sari Mulyani', receivedAt: new Date(today.setHours(7, 45)), notes: 'Diterima dengan baik' },
+      { deliveryPlan: plan1._id, school: schools[1]._id, driver: drivers[0]._id, portions: schools[1].portionsNeeded, status: 'delivered', receivedBy: 'Bapak Hendra Kusuma', receivedAt: new Date(today.setHours(8, 10)), notes: 'Semua porsi lengkap' },
       { deliveryPlan: plan2._id, school: schools[2]._id, driver: drivers[1]._id, portions: schools[2].portionsNeeded, status: 'pending' },
       { deliveryPlan: plan2._id, school: schools[3]._id, driver: drivers[1]._id, portions: schools[3].portionsNeeded, status: 'pending' },
       { deliveryPlan: plan3._id, school: schools[4]._id, driver: drivers[2]._id, portions: schools[4].portionsNeeded, status: 'pending' },
@@ -192,6 +206,7 @@ async function seedDatabase() {
 
     console.log('\n🎉 Seeding complete!');
     console.log('📊 Summary:');
+    console.log(`   Lokasi Dapur: MBG Dapur Lengkong Turangga 2 (Bandung)`);
     console.log(`   Sekolah: ${schools.length}`);
     console.log(`   Siswa: ${students.length}`);
     console.log(`   Kendaraan: ${vehicles.length}`);

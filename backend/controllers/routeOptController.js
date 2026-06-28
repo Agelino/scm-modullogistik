@@ -1,5 +1,6 @@
 const Route = require('../models/Route');
 const School = require('../models/School');
+const Settings = require('../models/Settings');
 const { optimizeRoute, optimizeRouteOSRM } = require('../services/routeOptimizer');
 
 // POST /api/routes/optimize
@@ -7,8 +8,14 @@ exports.optimize = async (req, res) => {
   try {
     const { originCoords, schoolIds, deliveryPlanId, useOSRM } = req.body;
     
-    // Default origin: Dapur Pusat MBG Jakarta
-    const origin = originCoords || [106.8456, -6.2088];
+    // Ambil origin: dari request body, atau dari Settings database, atau default
+    let origin = originCoords;
+    if (!origin) {
+      const settings = await Settings.findOne({ key: 'general' });
+      origin = settings?.kitchen?.location?.coordinates || [106.8456, -6.2088];
+    }
+    const kitchenSettings = await Settings.findOne({ key: 'general' });
+    const kitchenName = kitchenSettings?.kitchen?.name || 'Dapur Pusat MBG';
     
     // Get school data
     let schools;
@@ -35,7 +42,7 @@ exports.optimize = async (req, res) => {
       const route = await Route.create({
         deliveryPlan: deliveryPlanId,
         origin: {
-          name: 'Dapur Pusat MBG',
+          name: kitchenName,
           location: { type: 'Point', coordinates: origin }
         },
         waypoints: result.waypoints,
@@ -51,7 +58,7 @@ exports.optimize = async (req, res) => {
     res.json({
       success: true,
       data: {
-        origin: { name: 'Dapur Pusat MBG', coordinates: origin },
+        origin: { name: kitchenName, coordinates: origin },
         ...result
       }
     });

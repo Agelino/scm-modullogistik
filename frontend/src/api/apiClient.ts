@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   headers: { 'Content-Type': 'application/json' }
 });
 
@@ -89,6 +89,13 @@ export const analyticsApi = {
   getPerformance: (month?: number, year?: number) => api.get('/analytics/performance', { params: { month, year } }),
   getFuelEfficiency: () => api.get('/analytics/fuel-efficiency'),
   getOnTimeRate: () => api.get('/analytics/on-time-rate'),
+};
+
+// ====== Settings ======
+export const settingsApi = {
+  get: () => api.get('/settings'),
+  update: (data: Record<string, unknown>) => api.put('/settings', data),
+  getKitchenLocation: () => api.get('/settings/kitchen-location'),
 };
 
 export default api;

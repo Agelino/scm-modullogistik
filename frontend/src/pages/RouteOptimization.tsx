@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router';
-import { schoolApi, vehicleApi, driverApi, loadPlanApi } from '../api/apiClient';
+import { schoolApi, vehicleApi, driverApi, loadPlanApi, settingsApi } from '../api/apiClient';
 import type { ISchool, IVehicle, IDriver, IDeliveryPlan } from '../types';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import MapView from '../components/maps/MapView';
@@ -29,18 +29,29 @@ export default function RouteOptimization() {
   const [loading, setLoading] = useState(true);
   const [schoolsPerVehicle, setSchoolsPerVehicle] = useState(2);
   const [travelMode, setTravelMode] = useState<'driving'|'walking'|'bicycling'|'transit'>('driving');
-  const origin: [number, number] = [106.8456, -6.2088];
+  const [origin, setOrigin] = useState<[number, number]>([106.8456, -6.2088]);
+  const [kitchenName, setKitchenName] = useState('Dapur Pusat MBG');
 
   useEffect(() => {
     const fetchAll = async () => {
-      const [sRes, vRes, dRes] = await Promise.all([
+      const [sRes, vRes, dRes, kitchenRes] = await Promise.all([
         schoolApi.getAll(),
         vehicleApi.getAll(),
         driverApi.getAll(),
+        settingsApi.getKitchenLocation().catch(() => null),
       ]);
       const allSchools: ISchool[] = sRes.data.data;
       const allVehicles: IVehicle[] = vRes.data.data;
       const allDrivers: IDriver[] = dRes.data.data;
+
+      // Set kitchen origin from settings
+      if (kitchenRes?.data?.data) {
+        const k = kitchenRes.data.data;
+        if (k.coordinates && k.coordinates.length === 2) {
+          setOrigin(k.coordinates as [number, number]);
+        }
+        if (k.name) setKitchenName(k.name);
+      }
 
       setSchools(allSchools);
       setVehicles(allVehicles.filter(v => v.status === 'available'));
@@ -104,7 +115,7 @@ export default function RouteOptimization() {
   };
 
   const mapMarkers = [
-    { id:'origin', lat:origin[1], lng:origin[0], label:'Dapur Pusat MBG', type:'kitchen' as const, popup:'Titik keberangkatan' },
+    { id:'origin', lat:origin[1], lng:origin[0], label:kitchenName, type:'kitchen' as const, popup:'Titik keberangkatan' },
     ...schools.map(s => ({ id:s._id, lat:s.location.coordinates[1], lng:s.location.coordinates[0], label:s.name, type:'school' as const, popup:`${s.totalStudents} siswa • ${s.portionsNeeded} porsi` }))
   ];
 
@@ -200,7 +211,7 @@ export default function RouteOptimization() {
                 <div className="divide-y divide-gray-100">
                   <div className="px-4 py-2.5 flex items-center gap-2.5">
                     <div className="w-6 h-6 rounded-lg bg-red-50 flex items-center justify-center text-[10px] font-bold text-red-600 shrink-0">S</div>
-                    <div><p className="text-xs font-medium text-gray-800">Dapur Pusat MBG</p><p className="text-[10px] text-gray-400">Titik keberangkatan</p></div>
+                    <div><p className="text-xs font-medium text-gray-800">{kitchenName}</p><p className="text-[10px] text-gray-400">Titik keberangkatan</p></div>
                   </div>
                   {route.schools.map((school, i) => (
                     <div key={school._id} className="px-4 py-2.5 flex items-center gap-2.5">

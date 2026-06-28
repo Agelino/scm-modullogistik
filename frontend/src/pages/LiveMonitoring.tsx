@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSocket } from '../hooks/useSocket';
-import { trackingApi } from '../api/apiClient';
+import { trackingApi, settingsApi } from '../api/apiClient';
 import StatusBadge from '../components/common/StatusBadge';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -30,9 +30,9 @@ interface SchoolMonitorRow {
 export default function LiveMonitoring() {
   const [fleetPositions, setFleetPositions] = useState<FleetPosition[]>([]);
   const [schoolMonitoring, setSchoolMonitoring] = useState<SchoolMonitorRow[]>([
-    { schoolName: 'SDN Menteng 01', status: 'in_transit', vehicle: 'B 1234 MBG', eta: '11:20', receivedBy: '-' },
-    { schoolName: 'SMPN 12 Jakarta', status: 'planned', vehicle: 'B 5678 MBG', eta: '11:45', receivedBy: '-' },
-    { schoolName: 'SDN Cikini 03', status: 'delivered', vehicle: 'B 9012 MBG', eta: '10:58', receivedBy: 'Andi 7 (Kelas 2A)' },
+    { schoolName: 'SDN Lengkong 01', status: 'in_transit', vehicle: 'D 1234 MBG', eta: '11:20', receivedBy: '-' },
+    { schoolName: 'SDN Turangga 03', status: 'planned', vehicle: 'D 5678 MBG', eta: '11:45', receivedBy: '-' },
+    { schoolName: 'SDN Buah Batu 05', status: 'delivered', vehicle: 'D 9012 MBG', eta: '10:58', receivedBy: 'Andi 7 (Kelas 2A)' },
   ]);
   const [simulating, setSimulating] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
@@ -43,11 +43,22 @@ export default function LiveMonitoring() {
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
+
+    // Default center, will be updated from settings
     mapRef.current = L.map(containerRef.current, { center: [-6.2088, 106.8456], zoom: 12, zoomControl: true });
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; OSM &copy; CARTO', maxZoom: 19
     }).addTo(mapRef.current);
     joinMonitoring();
+
+    // Fetch kitchen location and re-center map
+    settingsApi.getKitchenLocation().then(res => {
+      const k = res.data?.data;
+      if (k?.coordinates && k.coordinates.length === 2 && mapRef.current) {
+        mapRef.current.setView([k.coordinates[1], k.coordinates[0]], 12);
+      }
+    }).catch(() => {});
+
     return () => { mapRef.current?.remove(); mapRef.current = null; };
   }, []); // eslint-disable-line
 
@@ -106,9 +117,9 @@ export default function LiveMonitoring() {
   const startSimulation = () => {
     setSimulating(true);
     const routes = [
-      { id: 'sim-1', plate: 'B 1234 MBG', driver: 'Ahmad', baseLat: -6.2088, baseLng: 106.8456 },
-      { id: 'sim-2', plate: 'B 5678 MBG', driver: 'Budi', baseLat: -6.1950, baseLng: 106.8850 },
-      { id: 'sim-3', plate: 'B 9012 MBG', driver: 'Cahyo', baseLat: -6.2310, baseLng: 106.8530 },
+      { id: 'sim-1', plate: 'D 1234 MBG', driver: 'Ahmad', baseLat: -6.9367, baseLng: 107.6333 },
+      { id: 'sim-2', plate: 'D 5678 MBG', driver: 'Budi', baseLat: -6.9270, baseLng: 107.6145 },
+      { id: 'sim-3', plate: 'D 9012 MBG', driver: 'Cahyo', baseLat: -6.9425, baseLng: 107.6370 },
     ];
     let step = 0;
     simIntervalRef.current = setInterval(() => {

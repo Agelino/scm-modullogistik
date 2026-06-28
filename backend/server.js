@@ -13,16 +13,20 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 
-// Socket.io setup
+// Allowed origins for CORS
+const allowedOrigins = process.env.FRONTEND_URL
+  ? [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:3000']
+  : ['http://localhost:5173', 'http://localhost:3000'];
+
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173', 'http://localhost:3000'],
+    origin: allowedOrigins,
     methods: ['GET', 'POST']
   }
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -39,6 +43,7 @@ app.use('/api/routes', require('./routes/routeOptRoutes'));
 app.use('/api/tracking', require('./routes/trackingRoutes'));
 app.use('/api/deliveries', require('./routes/deliveryRoutes'));
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
+app.use('/api/settings', require('./routes/settingsRoutes'));
 
 // Health check
 app.get('/api/health', (req, res) => {

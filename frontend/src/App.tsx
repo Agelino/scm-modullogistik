@@ -9,6 +9,7 @@ import RouteOptimization from './pages/RouteOptimization';
 import LiveMonitoring from './pages/LiveMonitoring';
 import ProofOfDelivery from './pages/ProofOfDelivery';
 import Analytics from './pages/Analytics';
+import Settings from './pages/Settings';
 import LoginPage from './pages/LoginPage';
 
 /** Guard: redirect ke /login jika belum autentikasi */
@@ -90,6 +91,7 @@ export default function App() {
             <Route path="/live-monitoring" element={<LiveMonitoring />} />
             <Route path="/proof-of-delivery" element={<ProofOfDelivery />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="/settings" element={<Settings />} />
           </Route>
 
           {/* Fallback */}

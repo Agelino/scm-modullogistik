@@ -111,12 +111,7 @@ ini untuk url nya nanti di env
 
 | Method | Endpoint | Kegunaan |
 |--------|----------|----------|
-| `GET` | `/api/drivers` | Ambil semua driver (termasuk kendaraan yang di-assign) |
-| `GET` | `/api/drivers/:id` | Detail satu driver |
-| `POST` | `/api/drivers` | Tambah driver baru |
-| `PUT` | `/api/drivers/:id` | Update data driver |
-| `DELETE` | `/api/drivers/:id` | Hapus driver |
-| `PATCH` | `/api/drivers/:id/status` | Update status driver (`available`/`busy`/`offline`) |
+
 
 **Data yang dikembalikan:**
 ```json

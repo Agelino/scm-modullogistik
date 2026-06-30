@@ -1,6 +1,7 @@
 const DeliveryPlan = require('../models/DeliveryPlan');
 const Vehicle = require('../models/Vehicle');
 const School = require('../models/School');
+const Driver = require('../models/Driver');
 const { getReadyPortions, getProductionStatus } = require('../services/novalMock');
 
 // GET /api/load-plans/ready-portions — Mock data dari Noval
@@ -125,6 +126,29 @@ exports.createDeliveryPlan = async (req, res) => {
     res.status(201).json({ success: true, data: populated });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+// GET /api/load-plans/driver/:novalDriverId — untuk mobile app driver
+exports.getDeliveryPlansByNovalDriver = async (req, res) => {
+  try {
+    const { novalDriverId } = req.params;
+
+    const driver = await Driver.findOne({ novalDriverId });
+    if (!driver) {
+      return res.status(404).json({ success: false, message: 'Driver tidak ditemukan' });
+    }
+
+    const plans = await DeliveryPlan.find({ driver: driver._id })
+      .populate('vehicle', 'plateNumber type capacity brand')
+      .populate('driver', 'name phone employeeId novalDriverId rating')
+      .populate('schools.school', 'name address location district phone contactPerson')
+      .populate('route')
+      .sort({ date: -1 });
+
+    res.json({ success: true, count: plans.length, data: plans });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

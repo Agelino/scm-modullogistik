@@ -188,6 +188,58 @@ Step 2 — Ambil data siswa sekolah ini:
 | `GET` | `/api/load-plans` | Ambil semua delivery plan yang sudah disimpan |
 | `POST` | `/api/load-plans` | Simpan delivery plan baru ke database |
 | `PATCH` | `/api/load-plans/:id/status` | Update status plan (`planned`→`loading`→`in_transit`→`completed`) |
+| `GET` | `/api/load-plans/driver/:novalDriverId` | **Ambil delivery plan milik driver** — untuk mobile app driver |
+
+**`GET /api/load-plans/driver/:novalDriverId` — untuk mobile app driver:**
+
+Setelah driver login ke sistem Noval dan dapat `id`-nya, panggil endpoint ini untuk tahu harus ke sekolah mana.
+
+Contoh: `GET /api/load-plans/driver/d_k3_1`
+
+Response:
+```json
+{
+  "success": true,
+  "count": 1,
+  "data": [{
+    "_id": "...",
+    "date": "2026-06-30",
+    "status": "planned",
+    "vehicle": { "plateNumber": "D 1234 MBG", "type": "Box", "capacity": 500 },
+    "driver": { "name": "Cecep Rahman", "phone": "081298765001", "novalDriverId": "d_k3_1" },
+    "schools": [
+      {
+        "school": {
+          "name": "SDN Lengkong 01",
+          "address": "Jl. Lengkong Besar No.12, Bandung",
+          "location": { "coordinates": [107.6145, -6.9270] },
+          "phone": "081234567001"
+        },
+        "portions": 320
+      },
+      {
+        "school": {
+          "name": "SDN Turangga 03",
+          "address": "Jl. Turangga No.8, Bandung",
+          "location": { "coordinates": [107.6312, -6.9340] },
+          "phone": "081234567002"
+        },
+        "portions": 280
+      }
+    ],
+    "totalPortions": 600
+  }]
+}
+```
+
+**novalDriverId yang tersedia (Bandung / k3):**
+| novalDriverId | Nama Driver |
+|---------------|-------------|
+| `d_k3_1` | Cecep Rahman |
+| `d_k3_2` | Dadang Subur |
+| `d_k3_3` | Eka Ramdani |
+| `d_k3_4` | Firman Utina |
+| `d_k3_5` | Gani Nurcahyo |
 
 **Body `POST /calculate`:**
 ```json
@@ -373,3 +425,4 @@ Modul Produksi  ──→ /api/load-plans/ready-portions
 | Status pengiriman realtime | `GET /api/tracking/active/all` atau Socket.io |
 | Porsi siap dari dapur | `GET /api/load-plans/ready-portions` |
 | **Login sekolah (mobile app feedback)** | **`POST /api/schools/login`** |
+| **Delivery plan driver (mobile app driver)** | **`GET /api/load-plans/driver/:novalDriverId`** |

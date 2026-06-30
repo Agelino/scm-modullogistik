@@ -6,6 +6,11 @@ const driverSchema = new mongoose.Schema({
     unique: true,
     sparse: true
   },
+  novalDriverId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
   name: {
     type: String,
     required: [true, 'Nama driver wajib diisi'],
